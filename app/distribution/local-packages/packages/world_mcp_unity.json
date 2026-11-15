@@ -1,0 +1,34 @@
+{
+  "schema": "octopus.local_package",
+  "schema_version": 1,
+  "id": "world_mcp_unity",
+  "version": "1.0.2",
+  "product_kind": "application",
+  "product_id": "world_mcp_unity",
+  "release_status": "optional",
+  "display": {
+    "name": "Unity MCP",
+    "description": "Work in your open Unity project through the MCP for Unity server on this Mac: inspect and change scenes, assets, scripts and builds.",
+    "developer": "Octopus",
+    "category": "plugin",
+    "icon": "code"
+  },
+  "required_packages": [
+    "world_mcp_example"
+  ],
+  "members": [
+    {
+      "registry_kind": "interface",
+      "owner": "world_mcp_unity",
+      "primary": true
+    },
+    {
+      "registry_kind": "artifact",
+      "owner": "artifact-application-mcp-unity-context"
+    },
+    {
+      "registry_kind": "artifact",
+      "owner": "artifact-skill-unity-mcp-orchestrator"
+    }
+  ]
+}

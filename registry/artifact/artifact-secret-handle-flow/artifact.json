@@ -1,0 +1,5 @@
+{
+  "label": "context.reference",
+  "id": "artifact-secret-handle-flow",
+  "text": "Keep secret values inside the boundary that owns them. Use an actual secret:// handle or an authorized credential path when another operation needs access. A handle identifies the value; it does not grant a recipient access to it.\n\nWhen raw credentials arrive, use the available secure persistence operation or granted credential location before passing them onward. Do not echo the value into messages, logs, memory or unrelated artifacts. A handoff that needs the credential carries its usable handle or path and enough context for the permitted consumer. If no authorized storage or transfer route exists, identify that missing capability without inventing a handle or exposing the secret.\n"
+}

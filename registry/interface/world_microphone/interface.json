@@ -1,0 +1,10 @@
+{
+  "id": "world_microphone",
+  "interface_type": "world",
+  "role": "sensor",
+  "direction": "bidirectional",
+  "source_names": [
+    "microphone"
+  ],
+  "interface_driver_ref": "app_server"
+}

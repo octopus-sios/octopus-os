@@ -1,0 +1,5 @@
+{
+  "label": "context.reference",
+  "id": "artifact-lifecycle-events-contract",
+  "text": "Lifecycle events cross system_lifecycle_events. Read its current lifecycle_contract.json for event names and whether each supports synchronous or asynchronous handling. The connection snapshot selects handlers and records their exact source, trust and destination identity.\n\nA synchronous handler participates in a held continuation. Its lifecycle.decision result is verified against the exact connection, event, emitter, handler and subject before lifecycle.decision.allowed can close the wait. Failure, denial or mismatched evidence does not produce an approval mark. Additional context in a decision must be explicitly bound by the continuation owner.\n\nAn asynchronous lifecycle.handler.output reports a correlated result without controlling the emitter. Use the handler's declared tool, MCP, provider or worker route and the consumer's expected result contract. Inspect related connections and pending events when behavior changes; a copied handler or ambient hook supplies neither authority nor a connection.\n"
+}

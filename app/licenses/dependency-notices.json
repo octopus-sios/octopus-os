@@ -1,0 +1,586 @@
+{
+  "schema_version": 1,
+  "retrieved_at_utc": "2026-10-07T06:00:15.842734+00:00",
+  "scope": "Exact-version supplemental original notice evidence for eight npm dependencies and one existing model asset; parent owns generator integration.",
+  "limitations": "Recovered evidence is not legal clearance. Dependency declarations are preserved verbatim, including absent khroma declaration. SHA256 covers saved original bytes; tarballs were verified against package-lock SHA512 and not retained.",
+  "entries": [
+    {
+      "name": "@mediapipe/tasks-vision",
+      "version": "1.2.0",
+      "package": "@mediapipe/tasks-vision@1.2.0",
+      "declared_license": "Apache-2.0",
+      "status": "notice-recovered",
+      "npm_release": {
+        "upstream_url": "https://registry.npmjs.org/@mediapipe%2ftasks-vision/1.2.0",
+        "tarball_url": "https://registry.npmjs.org/@mediapipe/tasks-vision/-/tasks-vision-1.2.0.tgz",
+        "tarball_sha256": "535175845f4ef8509b0240a0831abe8bcb3fa882accda6d080a4ede562a50a71",
+        "integrity": "sha512-7+dr9GbGyTtcuLh11wE5TOn4dNFRncIT9oAWs72620WX99KW5FfzF6rFJ/ChTgXG9vJ6dCiE9FrEEY4CnwPWKQ==",
+        "git_head": null,
+        "package_manifest_matches_installed": true
+      },
+      "upstream": {
+        "repository_url": "https://github.com/google-ai-edge/mediapipe",
+        "revision": "f329091f2f20a9143209897d7081e629421b9c9a",
+        "tag": "v1.2.0"
+      },
+      "notices": [
+        {
+          "path": "app/licenses/dependencies/mediapipe-tasks-vision-1.2.0/LICENSE",
+          "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8",
+          "bytes": 12331,
+          "upstream_url": "https://raw.githubusercontent.com/google-ai-edge/mediapipe/f329091f2f20a9143209897d7081e629421b9c9a/LICENSE",
+          "upstream_revision": "f329091f2f20a9143209897d7081e629421b9c9a",
+          "source_path": "LICENSE"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "app/licenses/dependencies/mediapipe-tasks-vision-1.2.0/npm-release.json",
+          "sha256": "42dbaef52ebf7c32d35fe4c4d8a861113eebb0b31d24bef998924b218fe1fb5f",
+          "bytes": 2547,
+          "upstream_url": "https://registry.npmjs.org/@mediapipe%2ftasks-vision/1.2.0",
+          "upstream_revision": "npm:@mediapipe/tasks-vision@1.2.0",
+          "source_path": null
+        },
+        {
+          "path": "app/licenses/dependencies/mediapipe-tasks-vision-1.2.0/package.json",
+          "sha256": "bf558f63285c8b46b8a6ce6344f38453dcfec741e79dc2ebf124feac74a7288b",
+          "bytes": 1192,
+          "upstream_url": "https://registry.npmjs.org/@mediapipe/tasks-vision/-/tasks-vision-1.2.0.tgz",
+          "upstream_revision": "npm:@mediapipe/tasks-vision@1.2.0",
+          "source_path": "package/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/mediapipe-tasks-vision-1.2.0/upstream-tag.json",
+          "sha256": "27be802469686cc229b51ac0da90f85ef739951208bacaf87627b29c14550701",
+          "bytes": 396,
+          "upstream_url": "https://api.github.com/repos/google-ai-edge/mediapipe/git/ref/tags/v1.2.0",
+          "upstream_revision": "f329091f2f20a9143209897d7081e629421b9c9a",
+          "source_path": null
+        }
+      ],
+      "limitations": [
+        "npm release has no gitHead. Same-version upstream tag and original npm Apache-2.0 declaration establish evidence; exact compiled-build revision and all transitive/native notice obligations are not proven."
+      ]
+    },
+    {
+      "name": "@pierre/theming",
+      "version": "0.0.2",
+      "package": "@pierre/theming@0.0.2",
+      "declared_license": "apache-2.0",
+      "status": "standard-license-text-retained-from-declaration",
+      "npm_release": {
+        "upstream_url": "https://registry.npmjs.org/@pierre%2ftheming/0.0.2",
+        "tarball_url": "https://registry.npmjs.org/@pierre/theming/-/theming-0.0.2.tgz",
+        "tarball_sha256": "8bd8d29f95d186a8e7b214a88ad521433bfb233e852f283757007ff559224865",
+        "integrity": "sha512-QM1M4stXfnzfaE8I8YbjXSApV8c+2dBsXJj8eYg9WTpBR/cTmCZIcfGnN4p13iRrYu2Br/R/OJfEL7uR8Qjctw==",
+        "git_head": null,
+        "package_manifest_matches_installed": true
+      },
+      "upstream": {
+        "repository_url": "https://github.com/pierrecomputer/pierre",
+        "revision": "0d40be4920992b2a1fb0a64153970dcbdb01f22a",
+        "tag": null
+      },
+      "notices": [
+        {
+          "path": "app/licenses/dependencies/pierre-theming-0.0.2/LICENSE-2.0.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "bytes": 11358,
+          "upstream_url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+          "resolved_upstream_url": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+          "upstream_revision": "Apache License, Version 2.0, January 2004",
+          "source_path": "LICENSE-2.0.txt",
+          "kind": "standard-license-text",
+          "basis": "Unmodified canonical Apache 2.0 text retained pursuant to the original @pierre/theming@0.0.2 package.json license=apache-2.0 declaration. Not recovered package-specific notice or authored copyright attribution."
+        }
+      ],
+      "evidence": [
+        {
+          "path": "app/licenses/dependencies/pierre-theming-0.0.2/npm-release.json",
+          "sha256": "2eb7c6b287f18bbe1d5b8aa07f05785219daa0d52faa3b080122b24fb8a1d85b",
+          "bytes": 2234,
+          "upstream_url": "https://registry.npmjs.org/@pierre%2ftheming/0.0.2",
+          "upstream_revision": "npm:@pierre/theming@0.0.2",
+          "source_path": null
+        },
+        {
+          "path": "app/licenses/dependencies/pierre-theming-0.0.2/package.json",
+          "sha256": "35f9e9a771aab1e45a468b8c42d7a797d45e68b0a85e3c5404926f1c97ace2f3",
+          "bytes": 1671,
+          "upstream_url": "https://registry.npmjs.org/@pierre/theming/-/theming-0.0.2.tgz",
+          "upstream_revision": "npm:@pierre/theming@0.0.2",
+          "source_path": "package/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/pierre-theming-0.0.2/upstream-package.json",
+          "sha256": "b4e416876c63f0e5caf02359a562240076ace68ebd4b569786c9560e6f8f3820",
+          "bytes": 1752,
+          "upstream_url": "https://raw.githubusercontent.com/pierrecomputer/pierre/0d40be4920992b2a1fb0a64153970dcbdb01f22a/packages/theming/package.json",
+          "upstream_revision": "0d40be4920992b2a1fb0a64153970dcbdb01f22a",
+          "source_path": "packages/theming/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/pierre-theming-0.0.2/README.md",
+          "sha256": "1e2e3b942c40d5b89dfb78fa347daaefdde63a4a5d07f74c6677bb31c17c67ad",
+          "bytes": 23559,
+          "upstream_url": "https://raw.githubusercontent.com/pierrecomputer/pierre/0d40be4920992b2a1fb0a64153970dcbdb01f22a/packages/theming/README.md",
+          "upstream_revision": "0d40be4920992b2a1fb0a64153970dcbdb01f22a",
+          "source_path": "packages/theming/README.md"
+        },
+        {
+          "path": "app/licenses/dependencies/pierre-theming-0.0.2/upstream-tree.json",
+          "sha256": "902046895e794d80c57b9f58dfb23a4388bf610d37164e1cf98b01f57a1255c3",
+          "bytes": 309710,
+          "upstream_url": "https://api.github.com/repos/pierrecomputer/pierre/git/trees/0d40be4920992b2a1fb0a64153970dcbdb01f22a?recursive=1",
+          "upstream_revision": "0d40be4920992b2a1fb0a64153970dcbdb01f22a",
+          "source_path": null
+        }
+      ],
+      "limitations": [
+        "The exact published package and identified 0.0.2 source manifest explicitly declare apache-2.0; canonical text is retained pursuant to that declaration, without invented attribution.",
+        "No package-specific NOTICE/license file was found in the exact npm artifact, packages/theming/ or repository root at the identified revision. Sibling package notices are not attributed to theming. No contradictory package grant was found in the inspected evidence.",
+        "npm supplies no gitHead and no dedicated theming tag was found. Identified version-bump commit declares 0.0.2 and its README exactly matches the published artifact; exact compiled-build revision is not proved."
+      ],
+      "failed_recoveries": [
+        {
+          "upstream_url": "https://raw.githubusercontent.com/pierrecomputer/pierre/0d40be4920992b2a1fb0a64153970dcbdb01f22a/packages/theming/LICENSE.md",
+          "http_status": 404,
+          "revision": "0d40be4920992b2a1fb0a64153970dcbdb01f22a"
+        },
+        {
+          "upstream_url": "https://raw.githubusercontent.com/pierrecomputer/pierre/0d40be4920992b2a1fb0a64153970dcbdb01f22a/LICENSE",
+          "http_status": 404,
+          "revision": "0d40be4920992b2a1fb0a64153970dcbdb01f22a"
+        },
+        {
+          "upstream_url": "https://raw.githubusercontent.com/pierrecomputer/pierre/0d40be4920992b2a1fb0a64153970dcbdb01f22a/LICENSE.md",
+          "http_status": 404,
+          "revision": "0d40be4920992b2a1fb0a64153970dcbdb01f22a"
+        }
+      ],
+      "notice_search": {
+        "npm_tarball_notice_paths": [],
+        "source_notice_paths": [],
+        "source_revision": "0d40be4920992b2a1fb0a64153970dcbdb01f22a",
+        "source_scope": "packages/theming/ and repository root, untruncated tree",
+        "package_notice_found": false,
+        "notice_absence_is_not_unlicensed": true
+      }
+    },
+    {
+      "name": "lru_map",
+      "version": "0.4.1",
+      "package": "lru_map@0.4.1",
+      "declared_license": "MIT",
+      "status": "notice-recovered",
+      "npm_release": {
+        "upstream_url": "https://registry.npmjs.org/lru_map/0.4.1",
+        "tarball_url": "https://registry.npmjs.org/lru_map/-/lru_map-0.4.1.tgz",
+        "tarball_sha256": "bf3e2b6eece48712a6c1195e7d912327f6fb61117223e22004188f9457726c4e",
+        "integrity": "sha512-I+lBvqMMFfqaV8CJCISjI3wbjmwVu/VyOoU7+qtu9d7ioW5klMgsTTiUOUp+DJvfTTzKXoPbyC6YfgkNcyPSOg==",
+        "git_head": "77c51e90dbcf4ffc0d27e6bc04a012a6b54a05e1",
+        "package_manifest_matches_installed": true
+      },
+      "upstream": {
+        "repository_url": "https://github.com/rsms/js-lru",
+        "revision": "77c51e90dbcf4ffc0d27e6bc04a012a6b54a05e1",
+        "tag": null
+      },
+      "notices": [
+        {
+          "path": "app/licenses/dependencies/lru_map-0.4.1/LICENSE",
+          "sha256": "6d1ba2d02cd55eebb60dc5991c64617fd3a5c87ac863606ff89dddec03e1cfa7",
+          "bytes": 1099,
+          "upstream_url": "https://raw.githubusercontent.com/rsms/js-lru/77c51e90dbcf4ffc0d27e6bc04a012a6b54a05e1/README.md",
+          "upstream_revision": "77c51e90dbcf4ffc0d27e6bc04a012a6b54a05e1",
+          "source_path": "README.md",
+          "derivation": "Exact byte suffix beginning at authored # MIT license heading; no license text synthesized."
+        }
+      ],
+      "evidence": [
+        {
+          "path": "app/licenses/dependencies/lru_map-0.4.1/npm-release.json",
+          "sha256": "151ec57e7d919c68f135628ddaf4e67c151b1d04c8a5f97b8c6d27dfb85d2174",
+          "bytes": 2704,
+          "upstream_url": "https://registry.npmjs.org/lru_map/0.4.1",
+          "upstream_revision": "npm:lru_map@0.4.1",
+          "source_path": null
+        },
+        {
+          "path": "app/licenses/dependencies/lru_map-0.4.1/package.json",
+          "sha256": "4de9809234c0ef8378d55736cf5ce55677934b5d4e6a150532640afbfc08bdad",
+          "bytes": 1175,
+          "upstream_url": "https://registry.npmjs.org/lru_map/-/lru_map-0.4.1.tgz",
+          "upstream_revision": "npm:lru_map@0.4.1",
+          "source_path": "package/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/lru_map-0.4.1/upstream-package.json",
+          "sha256": "4de9809234c0ef8378d55736cf5ce55677934b5d4e6a150532640afbfc08bdad",
+          "bytes": 1175,
+          "upstream_url": "https://raw.githubusercontent.com/rsms/js-lru/77c51e90dbcf4ffc0d27e6bc04a012a6b54a05e1/package.json",
+          "upstream_revision": "77c51e90dbcf4ffc0d27e6bc04a012a6b54a05e1",
+          "source_path": "package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/lru_map-0.4.1/README.md",
+          "sha256": "d444ac3606db5ac9790b4aa809172b9f7d88fe7a0093a1b01fd0abefb277dc05",
+          "bytes": 8991,
+          "upstream_url": "https://raw.githubusercontent.com/rsms/js-lru/77c51e90dbcf4ffc0d27e6bc04a012a6b54a05e1/README.md",
+          "upstream_revision": "77c51e90dbcf4ffc0d27e6bc04a012a6b54a05e1",
+          "source_path": "README.md"
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "name": "rehype-katex",
+      "version": "7.0.1",
+      "package": "rehype-katex@7.0.1",
+      "declared_license": "MIT",
+      "status": "notice-recovered",
+      "npm_release": {
+        "upstream_url": "https://registry.npmjs.org/rehype-katex/7.0.1",
+        "tarball_url": "https://registry.npmjs.org/rehype-katex/-/rehype-katex-7.0.1.tgz",
+        "tarball_sha256": "b76022624276e22d83bc214e998c7a744504ac1b837f9233d0e0c0ef2c0c5e7d",
+        "integrity": "sha512-OiM2wrZ/wuhKkigASodFoo8wimG3H12LWQaH8qSPVJn9apWKFSH3YOCtbKpBorTVw/eI7cuT21XBbvwEswbIOA==",
+        "git_head": "88a9497e1ede93b958237c85edbf5651faeca7af",
+        "package_manifest_matches_installed": true
+      },
+      "upstream": {
+        "repository_url": "https://github.com/remarkjs/remark-math",
+        "revision": "88a9497e1ede93b958237c85edbf5651faeca7af",
+        "tag": "rehype-katex@7.0.1"
+      },
+      "notices": [
+        {
+          "path": "app/licenses/dependencies/rehype-katex-7.0.1/LICENSE",
+          "sha256": "cb992262f361a5359e6771c28740d33c7041e15332ae8537fae40538992591a9",
+          "bytes": 1098,
+          "upstream_url": "https://raw.githubusercontent.com/remarkjs/remark-math/88a9497e1ede93b958237c85edbf5651faeca7af/license",
+          "upstream_revision": "88a9497e1ede93b958237c85edbf5651faeca7af",
+          "source_path": "license"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "app/licenses/dependencies/rehype-katex-7.0.1/npm-release.json",
+          "sha256": "12c6ea72642a8d79eaa0e4b77a8e4a59f01c8c4c7a787720161ebdbfa3fd3cc9",
+          "bytes": 2298,
+          "upstream_url": "https://registry.npmjs.org/rehype-katex/7.0.1",
+          "upstream_revision": "npm:rehype-katex@7.0.1",
+          "source_path": null
+        },
+        {
+          "path": "app/licenses/dependencies/rehype-katex-7.0.1/package.json",
+          "sha256": "c8a2a4b5fafa4145ef6c073806608967187be300c523685273fb188bc8d398bc",
+          "bytes": 1467,
+          "upstream_url": "https://registry.npmjs.org/rehype-katex/-/rehype-katex-7.0.1.tgz",
+          "upstream_revision": "npm:rehype-katex@7.0.1",
+          "source_path": "package/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/rehype-katex-7.0.1/upstream-package.json",
+          "sha256": "c8a2a4b5fafa4145ef6c073806608967187be300c523685273fb188bc8d398bc",
+          "bytes": 1467,
+          "upstream_url": "https://raw.githubusercontent.com/remarkjs/remark-math/88a9497e1ede93b958237c85edbf5651faeca7af/packages/rehype-katex/package.json",
+          "upstream_revision": "88a9497e1ede93b958237c85edbf5651faeca7af",
+          "source_path": "packages/rehype-katex/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/rehype-katex-7.0.1/upstream-tag.json",
+          "sha256": "8fffd143cef2138b8e5a50e901a7f4e36f4a7edda70c13f6fab495b4681ad7c8",
+          "bytes": 389,
+          "upstream_url": "https://api.github.com/repos/remarkjs/remark-math/git/ref/tags/rehype-katex%407.0.1",
+          "upstream_revision": "88a9497e1ede93b958237c85edbf5651faeca7af",
+          "source_path": null
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "name": "remark-math",
+      "version": "6.0.0",
+      "package": "remark-math@6.0.0",
+      "declared_license": "MIT",
+      "status": "notice-recovered",
+      "npm_release": {
+        "upstream_url": "https://registry.npmjs.org/remark-math/6.0.0",
+        "tarball_url": "https://registry.npmjs.org/remark-math/-/remark-math-6.0.0.tgz",
+        "tarball_sha256": "33d1b07c723a1167e0e4360437d98dedc1ef95cc9f0da1122147f26efb345417",
+        "integrity": "sha512-MMqgnP74Igy+S3WwnhQ7kqGlEerTETXMvJhrUzDikVZ2/uogJCb+WHUg97hK9/jcfc0dkD73s3LN8zU49cTEtA==",
+        "git_head": "d5d0660b150810a535bbb07eac6cc96a4510aa24",
+        "package_manifest_matches_installed": true
+      },
+      "upstream": {
+        "repository_url": "https://github.com/remarkjs/remark-math",
+        "revision": "d5d0660b150810a535bbb07eac6cc96a4510aa24",
+        "tag": null
+      },
+      "notices": [
+        {
+          "path": "app/licenses/dependencies/remark-math-6.0.0/LICENSE",
+          "sha256": "cb992262f361a5359e6771c28740d33c7041e15332ae8537fae40538992591a9",
+          "bytes": 1098,
+          "upstream_url": "https://raw.githubusercontent.com/remarkjs/remark-math/d5d0660b150810a535bbb07eac6cc96a4510aa24/license",
+          "upstream_revision": "d5d0660b150810a535bbb07eac6cc96a4510aa24",
+          "source_path": "license"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "app/licenses/dependencies/remark-math-6.0.0/npm-release.json",
+          "sha256": "33bf5639ec9fd728efbe86317aae6844e794e91689c1f71d8b61d403a1028f62",
+          "bytes": 2075,
+          "upstream_url": "https://registry.npmjs.org/remark-math/6.0.0",
+          "upstream_revision": "npm:remark-math@6.0.0",
+          "source_path": null
+        },
+        {
+          "path": "app/licenses/dependencies/remark-math-6.0.0/package.json",
+          "sha256": "936d400d2c2a3f121c4d2b6b84b8a891af02852032b0dcb31f0407d2d6a4364f",
+          "bytes": 1231,
+          "upstream_url": "https://registry.npmjs.org/remark-math/-/remark-math-6.0.0.tgz",
+          "upstream_revision": "npm:remark-math@6.0.0",
+          "source_path": "package/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/remark-math-6.0.0/upstream-package.json",
+          "sha256": "936d400d2c2a3f121c4d2b6b84b8a891af02852032b0dcb31f0407d2d6a4364f",
+          "bytes": 1231,
+          "upstream_url": "https://raw.githubusercontent.com/remarkjs/remark-math/d5d0660b150810a535bbb07eac6cc96a4510aa24/packages/remark-math/package.json",
+          "upstream_revision": "d5d0660b150810a535bbb07eac6cc96a4510aa24",
+          "source_path": "packages/remark-math/package.json"
+        }
+      ],
+      "limitations": []
+    },
+    {
+      "name": "khroma",
+      "version": "2.1.0",
+      "package": "khroma@2.1.0",
+      "declared_license": null,
+      "status": "notice-recovered-declaration-absent",
+      "npm_release": {
+        "upstream_url": "https://registry.npmjs.org/khroma/2.1.0",
+        "tarball_url": "https://registry.npmjs.org/khroma/-/khroma-2.1.0.tgz",
+        "tarball_sha256": "8963d209f3a682374d7f7e45e5fa361a58fc060c8528df6656fae0fc7c508110",
+        "integrity": "sha512-Ls993zuzfayK269Svk9hzpeGUKob/sIgZzyHYdjQoAdQetRKpOLj+k/QQQ/6Qi0Yz65mlROrfd+Ev+1+7dz9Kw==",
+        "git_head": "4968165afb0d3d09be66497e7985a34f7bfe6d42",
+        "package_manifest_matches_installed": true
+      },
+      "upstream": {
+        "repository_url": "https://github.com/fabiospampinato/khroma",
+        "revision": "4968165afb0d3d09be66497e7985a34f7bfe6d42",
+        "tag": null
+      },
+      "notices": [
+        {
+          "path": "app/licenses/dependencies/khroma-2.1.0/LICENSE",
+          "sha256": "66b333b0f66759a0b710459e03f7029abe17f4358114a128d2c972e642961b49",
+          "bytes": 1105,
+          "upstream_url": "https://raw.githubusercontent.com/fabiospampinato/khroma/4968165afb0d3d09be66497e7985a34f7bfe6d42/license",
+          "upstream_revision": "4968165afb0d3d09be66497e7985a34f7bfe6d42",
+          "source_path": "license"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "app/licenses/dependencies/khroma-2.1.0/npm-release.json",
+          "sha256": "523d6298a1a0dffc7196c57571bfb27e77809ab19391af7092c46f59c559e044",
+          "bytes": 1767,
+          "upstream_url": "https://registry.npmjs.org/khroma/2.1.0",
+          "upstream_revision": "npm:khroma@2.1.0",
+          "source_path": null
+        },
+        {
+          "path": "app/licenses/dependencies/khroma-2.1.0/package.json",
+          "sha256": "0d2145738d3cab828da4c5724b45e0dd2577c0ce84503c956d76897e93fa7de2",
+          "bytes": 883,
+          "upstream_url": "https://registry.npmjs.org/khroma/-/khroma-2.1.0.tgz",
+          "upstream_revision": "npm:khroma@2.1.0",
+          "source_path": "package/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/khroma-2.1.0/upstream-package.json",
+          "sha256": "0d2145738d3cab828da4c5724b45e0dd2577c0ce84503c956d76897e93fa7de2",
+          "bytes": 883,
+          "upstream_url": "https://raw.githubusercontent.com/fabiospampinato/khroma/4968165afb0d3d09be66497e7985a34f7bfe6d42/package.json",
+          "upstream_revision": "4968165afb0d3d09be66497e7985a34f7bfe6d42",
+          "source_path": "package.json"
+        }
+      ],
+      "limitations": [
+        "Published and upstream package.json omit the license field. Original license text is retained without assigning an SPDX declaration."
+      ]
+    },
+    {
+      "name": "fastdom",
+      "version": "1.0.12",
+      "package": "fastdom@1.0.12",
+      "declared_license": "MIT",
+      "status": "notice-recovered",
+      "npm_release": {
+        "upstream_url": "https://registry.npmjs.org/fastdom/1.0.12",
+        "tarball_url": "https://registry.npmjs.org/fastdom/-/fastdom-1.0.12.tgz",
+        "tarball_sha256": "15e452be64ae3661c3cc9d736524ebb689c23f162765d60741dcc518ec182265",
+        "integrity": "sha512-LB+xjSTEbjHE1cWsxu+tN2Xqr1kpi+V9aADI7sVM5ZMaXyYGPHULQMzpJMYqOTULK/73pUkWVzzObFRBkPr+hg==",
+        "git_head": "a7b9044d58952b970c8b918dcf0e7c8824ba0ff5",
+        "package_manifest_matches_installed": true
+      },
+      "upstream": {
+        "repository_url": "https://github.com/wilsonpage/fastdom",
+        "revision": "a7b9044d58952b970c8b918dcf0e7c8824ba0ff5",
+        "tag": null
+      },
+      "notices": [
+        {
+          "path": "app/licenses/dependencies/fastdom-1.0.12/LICENSE",
+          "sha256": "df2ae14f12f31864acef768195afe4584b08a257f25925f49884619279f02f37",
+          "bytes": 1106,
+          "upstream_url": "https://registry.npmjs.org/fastdom/-/fastdom-1.0.12.tgz",
+          "upstream_revision": "npm:fastdom@1.0.12",
+          "source_path": "package/README.md",
+          "derivation": "Exact byte suffix beginning at authored ## License heading of the published README.md; no license text synthesized."
+        }
+      ],
+      "evidence": [
+        {
+          "path": "app/licenses/dependencies/fastdom-1.0.12/npm-release.json",
+          "sha256": "5a2cee4f117bc194bb923afd460dec3e86967c38cc65f939efc8c9c966d215a1",
+          "bytes": 2235,
+          "upstream_url": "https://registry.npmjs.org/fastdom/1.0.12",
+          "upstream_revision": "npm:fastdom@1.0.12",
+          "source_path": null
+        },
+        {
+          "path": "app/licenses/dependencies/fastdom-1.0.12/package.json",
+          "sha256": "59d7cb811e170491bac1d4bc3c881a2fa3f23f50691ed60e6bd9bb9a1e197858",
+          "bytes": 1534,
+          "upstream_url": "https://registry.npmjs.org/fastdom/-/fastdom-1.0.12.tgz",
+          "upstream_revision": "npm:fastdom@1.0.12",
+          "source_path": "package/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/fastdom-1.0.12/README.md",
+          "sha256": "cc5669ab6f7741bb061c8a7244addc8e3af1f84ec7d2445744b59d0169a87d11",
+          "bytes": 7525,
+          "upstream_url": "https://registry.npmjs.org/fastdom/-/fastdom-1.0.12.tgz",
+          "upstream_revision": "npm:fastdom@1.0.12",
+          "source_path": "package/README.md"
+        }
+      ],
+      "limitations": [
+        "The published package contains no license file; its MIT notice is the License section of the published README.md."
+      ]
+    },
+    {
+      "name": "strictdom",
+      "version": "1.0.1",
+      "package": "strictdom@1.0.1",
+      "declared_license": "MIT",
+      "status": "notice-recovered",
+      "npm_release": {
+        "upstream_url": "https://registry.npmjs.org/strictdom/1.0.1",
+        "tarball_url": "https://registry.npmjs.org/strictdom/-/strictdom-1.0.1.tgz",
+        "tarball_sha256": "824b654d671c79365e96c87687dba8ce7bf36c45f2214365313c0a2d3e3ffbbb",
+        "integrity": "sha512-cEmp9QeXXRmjj/rVp9oyiqcvyocWab/HaoN4+bwFeZ7QzykJD6L3yD4v12K1x0tHpqRqVpJevN3gW7kyM39Bqg==",
+        "git_head": "a3bbf19013ecc9c9d165dd4ed89e94757161443e",
+        "package_manifest_matches_installed": true
+      },
+      "upstream": {
+        "repository_url": "https://github.com/wilsonpage/strictdom",
+        "revision": "a3bbf19013ecc9c9d165dd4ed89e94757161443e",
+        "tag": null
+      },
+      "notices": [
+        {
+          "path": "app/licenses/dependencies/strictdom-1.0.1/LICENSE",
+          "sha256": "eec385fa29ca410bf6bdbb5ddd5939af2067f474d3cd6d3fd46a4488656d8cbf",
+          "bytes": 1106,
+          "upstream_url": "https://registry.npmjs.org/strictdom/-/strictdom-1.0.1.tgz",
+          "upstream_revision": "npm:strictdom@1.0.1",
+          "source_path": "package/README.md",
+          "derivation": "Exact byte suffix beginning at authored ## License heading of the published README.md; no license text synthesized."
+        }
+      ],
+      "evidence": [
+        {
+          "path": "app/licenses/dependencies/strictdom-1.0.1/npm-release.json",
+          "sha256": "9b8386e4e6f5d8b1accd028fa75f4812cdbd16d82d842f08203f62cc0f5bf4b7",
+          "bytes": 1763,
+          "upstream_url": "https://registry.npmjs.org/strictdom/1.0.1",
+          "upstream_revision": "npm:strictdom@1.0.1",
+          "source_path": null
+        },
+        {
+          "path": "app/licenses/dependencies/strictdom-1.0.1/package.json",
+          "sha256": "41768059f064f33500a89c2777f6231bf69a8d32664d09ba675006ae0ed8f282",
+          "bytes": 989,
+          "upstream_url": "https://registry.npmjs.org/strictdom/-/strictdom-1.0.1.tgz",
+          "upstream_revision": "npm:strictdom@1.0.1",
+          "source_path": "package/package.json"
+        },
+        {
+          "path": "app/licenses/dependencies/strictdom-1.0.1/README.md",
+          "sha256": "9280accadb9c4d0aa2de2b304da7f477eacb0823504964b71370eb7ab99c202d",
+          "bytes": 4146,
+          "upstream_url": "https://registry.npmjs.org/strictdom/-/strictdom-1.0.1.tgz",
+          "upstream_revision": "npm:strictdom@1.0.1",
+          "source_path": "package/README.md"
+        }
+      ],
+      "limitations": [
+        "The published package contains no license file; its MIT notice is the License section of the published README.md."
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "name": "MediaPipe HandLandmarker full",
+      "version": "float16/1",
+      "asset_path": "app/public/models/hand_landmarker.task",
+      "sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1",
+      "bytes": 7819105,
+      "status": "model-license-evidence-recovered",
+      "upstream_url": "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+      "upstream_revision": "Google Storage generation 1682480004222387",
+      "upstream_sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1",
+      "matches_upstream_bytes": true,
+      "license_declaration": "Apache License, Version 2.0",
+      "declaration_source": {
+        "url": "https://storage.googleapis.com/mediapipe-assets/Model%20Card%20Hand%20Tracking%20%28Lite_Full%29%20with%20Fairness%20Oct%202021.pdf",
+        "page": 2,
+        "text": "LICENSED UNDER Apache License, Version 2.0"
+      },
+      "guide_url": "https://developers.google.com/edge/mediapipe/solutions/vision/hand_landmarker",
+      "notices": [
+        {
+          "path": "app/licenses/dependencies/mediapipe-hand-landmarker-float16-1/LICENSE",
+          "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8",
+          "bytes": 12331,
+          "upstream_url": "https://raw.githubusercontent.com/google-ai-edge/mediapipe/f8ef212d5c962c0e853db7e59d217056b187084b/LICENSE",
+          "upstream_revision": "f8ef212d5c962c0e853db7e59d217056b187084b",
+          "source_path": "LICENSE",
+          "derivation": "Original MediaPipe project Apache license text; model applicability is evidenced separately by Google model card page 2."
+        }
+      ],
+      "evidence": [
+        {
+          "path": "app/licenses/dependencies/mediapipe-hand-landmarker-float16-1/model-card.pdf",
+          "sha256": "43127ff8a92e22717f0d8c30dab3efef4641a29cbf50b15ae3de001be94ab76b",
+          "bytes": 358044,
+          "upstream_url": "https://storage.googleapis.com/mediapipe-assets/Model%20Card%20Hand%20Tracking%20%28Lite_Full%29%20with%20Fairness%20Oct%202021.pdf",
+          "upstream_revision": "Google Storage generation 1683223215027175",
+          "source_path": null
+        }
+      ],
+      "limitations": [
+        "Official guide links the model bundle and this model card. Model card has an October 2021 edition; it is not a per-binary signed grant or complete third-party notice audit. No new model binary copied into the repository."
+      ]
+    }
+  ],
+  "blockers": [],
+  "updated_at_utc": "2026-11-03T04:17:34.668276+00:00"
+}

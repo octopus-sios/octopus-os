@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "interface": "world_cron",
+  "activations": [
+    {
+      "enabled": false,
+      "activation_driver_ref": "cron_life",
+      "config": {
+        "schedule": {
+          "interval_seconds": 60,
+          "cron": null,
+          "fire_on_start": true,
+          "timezone": "UTC",
+          "reminder_env": "OCTOPUS_CRON_REMINDER",
+          "reminder_default": ""
+        }
+      }
+    }
+  ]
+}

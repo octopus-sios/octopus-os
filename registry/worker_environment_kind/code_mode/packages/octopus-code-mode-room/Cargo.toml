@@ -1,0 +1,52 @@
+[package]
+name = "octopus-code-mode-room"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+
+octopus-code-mode-engine = { path = "../octopus-code-mode-engine" }
+octopus-descriptors = { path = "../../../../../crates/octopus-descriptors" }
+octopus-ledger = { path = "../../../../../crates/octopus-ledger" }
+octopus-ledger-store = { path = "../../../../../crates/octopus-ledger-store" }
+octopus-run-record = { path = "../../../../../crates/octopus-run-record" }
+libc = "0.2.182"
+octopus-tool-door-runtime = { package = "octopus-process-session-tool-runtime", path = "../../../process_session/packages/octopus-process-session-tool-runtime" }
+octopus-interfaces = { path = "../../../../../crates/octopus-interfaces" }
+octopus-tool-handlers = { path = "../../../../../crates/octopus-tool-handlers" }
+octopus-tool-registry = { path = "../../../../../crates/octopus-tool-registry" }
+octopus-worker-env = { path = "../../../../../crates/octopus-worker-env" }
+
+octopus-run-authoring = { path = "../../../../interface/system_interface_authoring/packages/octopus-run-authoring" }
+octopus-app-server-interface = { path = "../../../../interface/world_operator_chat/packages/octopus-app-server-interface" }
+
+
+[dev-dependencies]
+octopus-runtime = { path = "../../../../../crates/octopus-runtime" }
+octopus-app-server = { path = "../../../../../crates/octopus-app-server", features = ["owner-contract-tests"] }
+octopus-ledger-index = { path = "../../../../../crates/octopus-ledger-index" }
+octopus-file-storage = { path = "../../../../../crates/octopus-file-storage" }
+octopus-file-write-contract = { path = "../../../system_room/packages/octopus-file-write-contract" }
+octopus-interface-activation-app-server-transport = { path = "../../../../interface/world_operator_chat/packages/octopus-interface-activation-app-server-transport" }
+octopus-interface-transport = { path = "../../../../../crates/octopus-interface-transport" }
+futures = { version = "0.3", default-features = false }
+tokio-tungstenite = "0.28.0"
+sha2 = "0.10"
+octopus-marks = { path = "../../../../../crates/octopus-marks" }
+octopus-verifiers = { path = "../../../../../crates/octopus-verifiers" }
+octopus-system-gui-env = { path = "../../../desktop_session/packages/octopus-system-gui-env" }
+octopus-tool-door-runtime = { package = "octopus-process-session-tool-runtime", path = "../../../process_session/packages/octopus-process-session-tool-runtime", features = ["owner-contract-tests"] }
+blake3.workspace = true
+tempfile = "3"
+
+octopus-policy = { path = "../../../../../crates/octopus-policy" }
+fs2 = "0.4"
+json-patch.workspace = true

@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "engine_api": "electron.ownedGuest.v1",
+  "history_api": "electron.ownedDownloadHistory.v1",
+  "source_only": true,
+  "runtime_activation": "held",
+  "native_compiled": false,
+  "native_accepted": false,
+  "foundation_patch_sha256": "09c3d3b1b38b71b3af132acb64456a4e6a1a3cda2571940eec8c14170070ef2c",
+  "production_patch_sha256": "6a410a8023470626446620eaf9420e0a833cf82cc6f693b8bc0f99ce4eeeccbd",
+  "patch": {
+    "path": "patches/electron-45.2.1-owned-download-history.patch",
+    "sha256": "7d7892ab1c3cf15af42f0d33f8672ebc982507446dd6688257c012db684975b4"
+  },
+  "files": [
+    {
+      "path": "electron/BUILD.gn",
+      "before_sha256": "cba41e0a0766e9dced6c8be052bd5b3ffba3cbdc3b516dbbc69468143a4bc99a",
+      "after_sha256": "599e97c4a5696e56b16c0d363426a0a5efbc008301722cd010d8798aa2a909e4"
+    },
+    {
+      "path": "electron/lib/browser/api/session.ts",
+      "before_sha256": "cfbd0fbdd7a26618e90e5d7f10312b5c7c5068c4b8236e744664326e9719cee5",
+      "after_sha256": "052c39451240d89bb11c171614b6c30e3f67cb150ca14f2770674f566e7878ff"
+    },
+    {
+      "path": "electron/shell/browser/api/electron_api_download_item.cc",
+      "before_sha256": "4904ead7fb6774b630eb6d55150f6a52bbe74b2d8a780f9d8caebf34581e46c9",
+      "after_sha256": "66929cb310022cdf5657b101ef4df3d6476a4bcbda61fa4f921c41dfe4161d28"
+    },
+    {
+      "path": "electron/shell/browser/api/electron_api_download_item.h",
+      "before_sha256": "4d3dcffffb0fde45111bc09484ecef3d6c15b04c1bac9f2173e891859c3fcc0c",
+      "after_sha256": "499fb742294cbc88670c29e9aa7dd37d1b99f05253a73e71077df72f2e0554ef"
+    },
+    {
+      "path": "electron/shell/browser/api/electron_api_session.cc",
+      "before_sha256": "fa3f768339de285b955f13344784dddd6b6a2ebe5e7c28fe7d48c387252da7fe",
+      "after_sha256": "1a65465186cd59ff316f6147ae654a5d137801d63e9126eafaecc79a12bc72b7"
+    },
+    {
+      "path": "electron/shell/browser/api/electron_api_session.h",
+      "before_sha256": "377f21a0502d25106b1fa422c6a084fb5d58d035fc81e488f2a94a2f0fbbf0b1",
+      "after_sha256": "d4db61ce92662449d626f69e63614b31eb47feaf7096f635c39aaabe92444cc1"
+    },
+    {
+      "path": "electron/shell/browser/api/owned_download_history.cc",
+      "before_sha256": null,
+      "after_sha256": "058adb6c9e06832d5318952a6199427dac900f398b490d3431e3f4ceec4845c6"
+    },
+    {
+      "path": "electron/shell/browser/api/owned_download_history.h",
+      "before_sha256": null,
+      "after_sha256": "99777e9acadea3c11f43855f984a6721287bcca7958e009620dcf85c918764d5"
+    },
+    {
+      "path": "electron/shell/browser/api/owned_download_history_binding.cc",
+      "before_sha256": null,
+      "after_sha256": "b7a0a612ddb325860d419d1877797243a6f423b6b3ccbffe3c20cf17f7718d14"
+    },
+    {
+      "path": "electron/shell/browser/api/owned_download_history_binding.h",
+      "before_sha256": null,
+      "after_sha256": "9ee1bc9e4e9a9d8f952341b7d38c9ca1bc03d974be8e02f950989368b21142f8"
+    },
+    {
+      "path": "electron/spec/api-owned-guest-spec.ts",
+      "before_sha256": "b858ee6588fb9014c71d62b683fe98cbf287736ba26695b34ed7a68944d6b1fc",
+      "after_sha256": "5a55bea8224a44cc07b022e5364a99c9ede8dafeb5f2c8ff5f352cc293d159e0"
+    },
+    {
+      "path": "electron/typings/internal-electron.d.ts",
+      "before_sha256": "865e93f47256a50475e2d89391186ccc5b70d549110966bb0ecb082c0d46aeb6",
+      "after_sha256": "6e195d8f8141b5d7310209b97ef215c2227885049d1d132a565a6d075bbe6e0f"
+    }
+  ],
+  "source_contract": {
+    "writer": "Only configured native Session records a GUID found in its actual DownloadManager; native row is copied before asynchronous DB work. Missing/live-destroyed GUID cannot create a row. Session private directory cannot retarget.",
+    "reader": "session.openOwnedDownloadHistory exact canonical owner0700 directory returns opaque main-only history handle without creating a Session/WebContents. Shared isolate owner per exact path prevents reopening/crash-normalizing an active writer. Reader close does not close another reader/writer.",
+    "database": "Pinned Chromium DownloadDatabase and sql::Database History tag, native GUID/state/path/bytes/URL chain/slices, transactional owned metadata. No Chrome Profile cast or testing-only HistoryService. Existing native IN_PROGRESS rows become crash-interrupted only on DB opening; history does not recreate native DownloadItems or requests.",
+    "shutdown": "OnBeforeMicrotasksRunnerDispose from the canonical Electron Chromium series rejects pending callbacks while V8 can settle them, resets sequenced DB after queued writes. UI/main callback handles never resolve directly from the DB thread.",
+    "native_methods": [
+      "Session.configureOwnedDownloadHistory(directory)",
+      "Session.recordOwnedDownloadHistory(actualGUID,metadataJSON)",
+      "DownloadItem.getGUID()",
+      "session.openOwnedDownloadHistory(directory)->reader",
+      "reader.search({text,offset,maxResults})",
+      "reader.update(existingGUID,metadataJSON)",
+      "reader.remove(existingGUID)",
+      "reader.clear()",
+      "reader.flush()",
+      "reader.close()"
+    ],
+    "query": "ONE entire nonempty UTF16 term, Chromium primary case/accent comparison over original/final raw+formatted URLs and actual target display path; valid UTF8 native basename comparison. Source matches connected installed owner/predicate branches; native compile/locale runtime remains unproved.",
+    "source_only_limits": [
+      "Pinned fragment apply is not full canonical checkout composition, C++ compilation, ABI or native acceptance.",
+      "Exact package observer now consumes native GUID/Session/history-reader APIs in source. No native compilation/execution or legacy JSON/native conversion has occurred; prior data requires its explicit owner decision before activation.",
+      "SQL private sidecar permissions/durable restart and isolate shutdown require the authored native spec and later native acceptance."
+    ]
+  },
+  "native_check": {
+    "title": "retains actual download GUID and SQLite rows across a fresh engine process without recreating a page",
+    "spec": "electron/spec/api-owned-guest-spec.ts",
+    "execution": "held"
+  },
+  "upstream": {
+    "electron": {
+      "version": "45.2.1",
+      "commit": "f81ca3d4f09f57667238120adacb01239d5ecd89"
+    },
+    "chromium": {
+      "version": "156.0.8078.75",
+      "commit": "861389936bf33ea77529ee5dcc0605e68f6bb620"
+    },
+    "proof_files": {
+      "chromium/gin/per_isolate_data.h": "6c095f8579f05d6da1e3fcf5442649e4d3129a2e551b61356a97dfb7c9fa5b2d",
+      "chromium/sql/database.h": "7b371c22e9a9ec9b61b45d04604fdca12bedc10428d3e09d6af15add722032f4",
+      "chromium/base/threading/sequence_bound.h": "f0e537d921d35ca445ecbef71af701a136e9e8665ef135dbe8edc4b2681ead2c",
+      "chromium/components/history/content/browser/download_conversions.h": "c618e460415dbbadbb4f9a6b526d63929ac5b40f887d84c49120411dbdfcd640",
+      "chromium/components/history/core/browser/download_database.h": "3ce5a8c7e576eac3478e1118fa8c0daaa0cac6c6236819d97080c4ff47f73d12",
+      "chromium/components/history/core/browser/download_types.h": "b7a1751513129edf2f6533e6262615a3084188f6565181b6c7afee1b33fc125f",
+      "chromium/components/history/core/browser/download_database.cc": "c9831d365612c658a2c2935dd59b3ad5d31cbb73522a27d24dd7677b025756ec",
+      "chromium/components/history/core/browser/download_row.h": "a2655d88502aa4427654107b2c22a5fd1ad7a1a951572f3bdc7440d8430232f9",
+      "chromium/components/download/public/common/simple_download_manager.h": "aaa93221d2b570558cb6973063e88c7bbd088b87c9581044e4fff15438498a45",
+      "patches/chromium/chore_restore_some_deprecated_wrapper_utility_in_gin.patch": "f83b1cce2069e1efeaa5b9d6a49102b82fa26665a62f6415da0b6be987c6f2cb",
+      "chromium/chrome/browser/download/download_query.cc": "959f6bad22c0f1c9ecef49109e052eeb10e48f132203692665d0eeedd46ceff7",
+      "chromium/base/i18n/string_search.h": "9682251399efab90541a55a0ddcdb06fe8f4cfdbfe1740e078dbe99839986219",
+      "chromium/base/i18n/string_search.cc": "347f7f3391de440c8fd144203136ba36e19c76d2e35e0f08065d76f93b30670b"
+    }
+  }
+}

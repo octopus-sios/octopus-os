@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "engine_api": "octopus.ownedGuest.v1",
+  "platform": "darwin",
+  "architectures": [
+    "arm64",
+    "x64"
+  ],
+  "source_only": true,
+  "runtime_activation": "held",
+  "native_compile_validated": false,
+  "electron": {
+    "version": "45.2.1",
+    "commit": "f81ca3d4f09f57667238120adacb01239d5ecd89"
+  },
+  "chromium": {
+    "version": "156.0.8078.75",
+    "commit": "861389936bf33ea77529ee5dcc0605e68f6bb620"
+  },
+  "node_version": "24.22.1",
+  "patch": {
+    "path": "patches/electron-45.2.1-owned-guest.patch",
+    "sha256": "09c3d3b1b38b71b3af132acb64456a4e6a1a3cda2571940eec8c14170070ef2c"
+  },
+  "files": [
+    {
+      "path": "electron/BUILD.gn",
+      "before_sha256": "c6cc36f64bc87319014da7b0eecbd16ad70967e0d034e2d7e3686aa616bb3f4d",
+      "after_sha256": "cba41e0a0766e9dced6c8be052bd5b3ffba3cbdc3b516dbbc69468143a4bc99a"
+    },
+    {
+      "path": "electron/lib/browser/api/web-contents.ts",
+      "before_sha256": "b158e3f6b4d11f7fc321552b798ca675c266f953e5d7b887faa5c46c8baca697",
+      "after_sha256": "5d6db35bcc2e952e9b66dba152c064f2d59edfd181097aba13e28a1158cda21c"
+    },
+    {
+      "path": "electron/lib/browser/guest-view-manager.ts",
+      "before_sha256": "95b0a67fe73d5dd29f5f6f7530d28005de752c44026e6044f5be55a14d89a08d",
+      "after_sha256": "13b19a20acad43c6aff2947865d6b31e4b4347d2841ab642f4557faa9bd060f3"
+    },
+    {
+      "path": "electron/lib/common/ipc-messages.ts",
+      "before_sha256": "6352d9b48b42181fba4fbddc9aa5fcc1413da350b2e74b344695b69791a9031d",
+      "after_sha256": "ca8434b20d28fb41e04512d371b214dae317e2d7b8ec44d87197757e1abedd13"
+    },
+    {
+      "path": "electron/lib/renderer/web-view/guest-view-internal.ts",
+      "before_sha256": "25239593214cb2fc429140662513c924a9a57ea6ef6bd0bc77863527acae59b1",
+      "after_sha256": "2bea104603bbbc3679cebc09ec44b85bce5d4dfdbc45ff6eec45807e0058e60d"
+    },
+    {
+      "path": "electron/lib/renderer/web-view/web-view-element.ts",
+      "before_sha256": "492bc000e9877fb4e4d353f72bd4afc641d28f0355cd35c1d98315ef2047d5bd",
+      "after_sha256": "3f041c9ae56d8b77421f63301263a28718ce96d4217625cc6982def4ead1e6b8"
+    },
+    {
+      "path": "electron/lib/renderer/web-view/web-view-impl.ts",
+      "before_sha256": "0353138d339481800aedd94ab9267fdc013384f7a255ecd72cb07b0b4e968545",
+      "after_sha256": "30a430e1c31417133d5ae59277f1cedb9a258b6e2c86f393cdaee21b318f6472"
+    },
+    {
+      "path": "electron/shell/browser/api/electron_api_web_contents.cc",
+      "before_sha256": "f3dfc1059ed20c5dfb83fabad484505a6601be6c2b64a26cac5b1f7eb140decf",
+      "after_sha256": "e4d14cc210a813a7f71f0ccb410536cac1da642d18b72649d8207c2b52903a68"
+    },
+    {
+      "path": "electron/shell/browser/api/electron_api_web_contents.h",
+      "before_sha256": "31a6389da0678dffb2c372f0d1ed98f0e7bc8c9e2099df97bfcf2ace6db5186d",
+      "after_sha256": "76b636154ee6b34646ec7abac134df01316ec8f2121bc6dbd07dea522fc08346"
+    },
+    {
+      "path": "electron/shell/browser/api/electron_api_web_contents_impl.cc",
+      "before_sha256": "4a618cc7fd8bf3bda68fa03f00f1ba540efa2b840289226e0fd77d8fe0364acf",
+      "after_sha256": "ac75dea4623cb77c287e5e2afc7f3eaf3dd474ef3151cece10610bff3e3bf75a"
+    },
+    {
+      "path": "electron/shell/browser/api/electron_api_web_contents_view.cc",
+      "before_sha256": "55082ef26044d288e2a145ec3eaa3ada9df2c5ab9d80d56daab3953e0b6e69ec",
+      "after_sha256": "13b72f698ad1bfd5e75ac7579a51914b692383e3cbe61bdf45546d7d02eaa595"
+    },
+    {
+      "path": "electron/shell/browser/api/owned_guest_presentation.cc",
+      "before_sha256": null,
+      "after_sha256": "41fd7b2cbdb54963b94d389f905a016c9d7e52979c53d3103a3778bfc106fa64"
+    },
+    {
+      "path": "electron/shell/browser/api/owned_guest_presentation.h",
+      "before_sha256": null,
+      "after_sha256": "6c6fb41aac77e848df1c1f183ba5d07eb3b3ae44590389bfd942a3dccf1973e3"
+    },
+    {
+      "path": "electron/spec/api-owned-guest-spec.ts",
+      "before_sha256": null,
+      "after_sha256": "81b6c71d79ebc68584d30856ece4216296db0971112c9eeeb25806c88de2d55d"
+    },
+    {
+      "path": "electron/typings/internal-electron.d.ts",
+      "before_sha256": "9c78351e4329716f86919859868872263b25c341e3762b13272dfdabc8af55dc",
+      "after_sha256": "865e93f47256a50475e2d89391186ccc5b70d549110966bb0ecb082c0d46aeb6"
+    }
+  ],
+  "native_dependency": {
+    "target": "//components/guest_contents/browser",
+    "component_build_enabled_by_default_on_mac": true,
+    "runtime_feature": "AttachUnownedInnerWebContents",
+    "upstream_runtime_default": "disabled",
+    "experimental_upstream_status": "Prototype; not production-ready upstream. This patch leaves the feature definition and check unchanged. Production activation requires separate engine review and native acceptance.",
+    "testing_passkey_used": false,
+    "feature_override_added": false,
+    "renderer_guest_contents_host_mojo_bound": false
+  },
+  "main_api": {
+    "create": "webContents.createOwnedGuest({session,...safePreferences,initialSurfaceSize:{width,height}}) -> the single owned WebContents; exact positive integer DIP dimensions <=2147483647 and explicit Session required. Kind calls after authorized create admission, before first loadURL; no implicit engine dimensions.",
+    "lease": "guest.createOwnedGuestLease(embedderWebContents, genuineFrameToken, generation) -> single-use token or empty string; generation must be exact integer1..2147483647 and strictly increase; bound live embedder primary RFH and destination FrameTreeNodeId; expires at60s",
+    "cancel": "guest.cancelOwnedGuestLease(token) -> boolean; always retains page. Prior presentation remains until native transfer detaches; interrupted transfer may leave retained page without presentation.",
+    "release": "guest.releaseOwnedGuest(generation) -> boolean; exact generation, preserves contents/Session/debugger",
+    "visibility": "guest.setOwnedGuestVisibility(generation, visible) -> boolean; actual window visibility narrows requested visibility; no focus",
+    "capture": "guest.setOwnedGuestPaintLease(enabled); native held IncrementCapturerCount(empty,true,false,false)",
+    "close": "guest.destroy(); revokes pending leases, releases presentation/capturer and deletes owned contents exactly once",
+    "popup": "owned opener AddNewContents wraps SAME native popup in SAME BrowserContext, preserving its positive actual unscaled widget/container size; otherwise uses immutable initialSurfaceSize explicitly supplied by kind to opener. Host registers options.webContents and returns it; outlivesOpener explicit.",
+    "private_gvm": "findOwnedGuestLease + attachOwnedGuest validate/commit callbacks exist only in main linked binding; not renderer control APIs"
+  },
+  "renderer_api": {
+    "prepare": "connected empty <webview>.getOwnedGuestFrameToken(); main independently binds the returned genuine native frame after resolving current authorized surface",
+    "attach": "element.adoptOwnedGuest(token,generation) -> Promise<void>; no URL/Session/new page; binding UUID and per-element epoch reject stale completion/release",
+    "release": "element.releaseOwnedGuest(); DOM disconnection releases presentation only",
+    "focus": "element.focus() uses existing native embedded iframe focus; model CDP focus emulation remains independent",
+    "geometry": "ordinary embedded WebContents DOM clipping/transforms; full page rect separate from outer clip; model emulated metrics remain kind/CDP-owned"
+  },
+  "source_validation": {
+    "command": "node build.cjs check-fragments /absolute/source-fragment-root",
+    "application": "node build.cjs apply-fragments /absolute/review-source-fragment-root",
+    "postimage": "node build.cjs verify-applied /absolute/review-source-fragment-root",
+    "checkout_check": "node build.cjs check-checkout /absolute/chromium-src-with-electron"
+  },
+  "build_contract": {
+    "checkout": "Exact Chromium+Electron commits; apply the canonical Electron patch series for that release before compiling.",
+    "target": "electron:electron",
+    "artifact": "separate Octopus-owned macOS Electron app/framework with complete source, official patch-series and toolchain hashes; never replace an existing bundle from this helper",
+    "native_acceptance_spec": "electron/spec/api-owned-guest-spec.ts",
+    "build_or_test_launch_performed": false,
+    "native_acceptance_scope": "Authored same-WC transfer, popup, frame/lease cancellation, pre-DOM no-explicit-emulation two changed pixel captures, same page after detach, and retained emulation. Not executed. Authored same-WC renderer crash + diagnostic actual document/history replacement; not executed.",
+    "commands_compile_patched_sources_only": [
+      "gn gen out/OwnedGuest --args='import(\"//electron/build/args/release.gn\") target_os=\"mac\" target_cpu=\"arm64\" enable_owned_guest_embedder=true electron_vendor_version=\"octopus_owned_guest:1\"'",
+      "autoninja -C out/OwnedGuest electron:electron"
+    ],
+    "owned_engine_available_from_current_recipe": false,
+    "availability_blocker": "Foundation alone preserves disabled upstream feature. Production variant source replaces global activation with the exact owned-wrapper native callback; complete release-series source composition and native compilation/acceptance remain unproved. Package selector requires their actual receipts."
+  },
+  "reference_source_hashes": {
+    "base/functional/callback_helpers.h": "c491f8b42568a01e8f48c654b553ccf146981755d28ab67f9fdbbc6daebe4130",
+    "components/guest_contents/browser/BUILD.gn": "345916f556d41942b29bbd98d748c6329a41bb5faf7177817c3b1c6f8b64e2ef",
+    "components/guest_contents/common/buildflags.gni": "0ea54a55e5fba04954ba2e9183f2d054f5596f4bac41528009a0d9f647622888",
+    "content/public/browser/render_frame_host.h": "ab2bedd9488d2c88d82d44b5ed09a3e34ab4a3d82c3c51573be800e19feeb780",
+    "content/public/browser/web_contents_observer.h": "bbb2264ec451a7efddd8961074fecd25a5c695b48513f144761d6d2c3d866119",
+    "content/public/browser/web_contents.h": "da515b8bc2254be8c7211e8cb975c4c4e7588507a47ed0ce092e88303a142eca",
+    "components/guest_contents/browser/guest_contents_handle.cc": "7258bbba52df83b770eb992c6c5720e4b37491e000e65c992378d4b396aa6ff0",
+    "components/guest_contents/browser/guest_contents_handle.h": "c6e091065a67505c043c4b9f018391053a3da814c1ed792643b6f9cabd5c6443",
+    "electron/build/args/release.gn": "b4490cee911e0ed136a6d095c69a7914cb3f4aa2d5517e3f987a2b5f45d3cd56",
+    "content/browser/web_contents/web_contents_impl.cc": "e551b400ae68665f06ce6f00807728763192866024be92e1507370d0db0a4199",
+    "content/browser/web_contents/web_contents_impl.h": "3e72392bb48eefc9433b931f038994ac46b5f979608e1f0bb58db8c729190240",
+    "content/browser/web_contents/web_contents_view_mac.mm": "068b7938942a1e5feb54917b31fc4827d2a1de749a811219f5b0bcfda851d329",
+    "content/browser/renderer_host/render_widget_host_view_child_frame.cc": "c63bdf80c77eb28a12b64ab7db1a52abfd03011064311251155c24b6e5b3e0e0",
+    "content/browser/renderer_host/render_widget_host_view_mac.mm": "17b9ac1271936dc3dcc2840544c556edf680cd5c54642115c5c8c24fd6b650df"
+  },
+  "initial_surface": {
+    "required": true,
+    "units": "unscaled-dip",
+    "minimum": 1,
+    "maximum": 2147483647,
+    "default": null,
+    "native_initialization": "public content::WebContents.Resize on owned unattached native container before factory returns/first loadURL",
+    "detach": "capture actual positive unscaled view size before retained detach; recreate root through unchanged GuestContentsHandle chain; restore container only alive+same owner+unattached, preserve Chromium-selected positive replacement widget size after container autoresize",
+    "model_metrics": "No Emulation command/default or GetSizeForNewRenderView override added. Nullable host modelViewport is independent. Existing actual emulation widget size retains priority.",
+    "paint_acceptance": "Unproved; authored native spec only, no native execution"
+  },
+  "diagnostic_history": {
+    "load_url_option": "replaceCurrentEntry:boolean",
+    "native_owner": "content::NavigationController::LoadURLParams.should_replace_current_entry",
+    "scope": "Main-owned diagnostic document replaces actual failed entry in the SAME WebContents. No URL/model action recreation or replay.",
+    "native_spec": "retains the crashed WebContents and replaces only its diagnostic history entry",
+    "source_apply_verified": true,
+    "native_executed": false
+  },
+  "production_variant": {
+    "manifest": "production.json",
+    "patch": "patches/electron-45.2.1-owned-guest-production.patch",
+    "artifact_verifier": "engine-artifact.cjs",
+    "status": "source_implemented_native_uncompiled_unaccepted",
+    "activation": "explicit GN enable_owned_guest_embedder=true; Chromium default feature unchanged; exact owned native wrapper callback only",
+    "package_input": "OCTOPUS_OWNED_ELECTRON_RECEIPT",
+    "stock_fallback": false
+  },
+  "production_recipe": {
+    "descriptor": "production.json",
+    "module": "engine-artifact.cjs",
+    "native_spec_runner": "native-spec-runner.cjs",
+    "runtime_activation": "held",
+    "native_accepted": false
+  }
+}

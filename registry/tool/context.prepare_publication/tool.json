@@ -1,0 +1,350 @@
+{
+  "interface": "system_context",
+  "process": {
+    "bin": "target/debug/octopus-artifact-bound-tool",
+    "authority": {
+      "read_root_slots": [
+        "registry_artifact_root"
+      ],
+      "write_root_slots": [],
+      "executable_root_slots": [],
+      "read_paths": [],
+      "write_paths": [],
+      "executable_paths": [],
+      "executable_commands": [],
+      "read_env_paths": [],
+      "write_env_paths": [],
+      "executable_env_paths": [],
+      "allow_network": false,
+      "allow_local_ipc": false
+    }
+  },
+  "supported_worker_environment_kinds": [
+    "system_room"
+  ],
+  "is_world_effect": false,
+  "id": "context.prepare_publication",
+  "handler_config": {
+    "operation": "collection_prepare"
+  },
+  "description": "Prepare creation, correction or withdrawal of reusable collection content. This is read-only: returns exact ordered file.write arguments; publication happens only when that ordinary granted write succeeds. Keep useful knowledge/procedures source-grounded, with applicability and evidence; selection refers to existing framework capabilities.",
+  "args_schema": {
+    "type": "object",
+    "properties": {
+      "source": {
+        "$ref": "#/$defs/artifact_ref",
+        "description": "Exact readable context.collection source object {id, content} already bound to this invocation, copied verbatim from a context.* result: a source listed by context.discover without arguments, a page's source, or a pin's source."
+      },
+      "entry": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema_version",
+          "id",
+          "title",
+          "description",
+          "applicability",
+          "state",
+          "scope",
+          "selection"
+        ],
+        "properties": {
+          "schema_version": {
+            "const": 1,
+            "type": "integer"
+          },
+          "id": {
+            "$ref": "#/$defs/str"
+          },
+          "title": {
+            "$ref": "#/$defs/str"
+          },
+          "description": {
+            "$ref": "#/$defs/str"
+          },
+          "applicability": {
+            "$ref": "#/$defs/str"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "active",
+              "withdrawn"
+            ]
+          },
+          "scope": {
+            "type": "object",
+            "description": "Who may see the entry. Omit an axis to leave it unrestricted; a listed axis names at least one exact id.",
+            "additionalProperties": false,
+            "properties": {
+              "ee_ids": {
+                "$ref": "#/$defs/ids",
+                "minItems": 1
+              },
+              "worker_interfaces": {
+                "$ref": "#/$defs/ids",
+                "minItems": 1
+              }
+            }
+          },
+          "content": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "text": {
+                "$ref": "#/$defs/str"
+              },
+              "evidence": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/artifact_ref"
+                }
+              }
+            }
+          },
+          "selection": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "selected_tools": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "tool",
+                    "interface",
+                    "worker_environment_kind"
+                  ],
+                  "properties": {
+                    "tool": {
+                      "$ref": "#/$defs/str"
+                    },
+                    "interface": {
+                      "$ref": "#/$defs/str"
+                    },
+                    "worker_environment_kind": {
+                      "$ref": "#/$defs/str"
+                    }
+                  }
+                }
+              },
+              "selected_worker_environment_kinds": {
+                "$ref": "#/$defs/ids"
+              },
+              "door_host_slots": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/$defs/str"
+                  }
+                }
+              },
+              "external_inputs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "checkpoint_id",
+                    "interface_id"
+                  ],
+                  "properties": {
+                    "checkpoint_id": {
+                      "$ref": "#/$defs/str"
+                    },
+                    "interface_id": {
+                      "$ref": "#/$defs/str"
+                    },
+                    "required_verified_artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/verified_artifact"
+                      }
+                    }
+                  }
+                }
+              },
+              "external_relays": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "checkpoint_id",
+                    "interface_id",
+                    "outbound_interface_ids"
+                  ],
+                  "properties": {
+                    "checkpoint_id": {
+                      "$ref": "#/$defs/str"
+                    },
+                    "interface_id": {
+                      "$ref": "#/$defs/str"
+                    },
+                    "outbound_interface_ids": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/str"
+                      }
+                    },
+                    "required_verified_artifacts": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/verified_artifact"
+                      }
+                    }
+                  }
+                }
+              },
+              "model_outputs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "checkpoint_id",
+                    "interface_id",
+                    "required_verified_artifact"
+                  ],
+                  "properties": {
+                    "checkpoint_id": {
+                      "$ref": "#/$defs/str"
+                    },
+                    "interface_id": {
+                      "$ref": "#/$defs/str"
+                    },
+                    "required_verified_artifact": {
+                      "$ref": "#/$defs/verified_artifact"
+                    }
+                  }
+                }
+              },
+              "context_artifact_bindings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$ref": "#/$defs/str"
+                    }
+                  }
+                }
+              },
+              "payload_artifact_bindings": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/artifact_ref"
+                }
+              }
+            }
+          },
+          "requires": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "id"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "interface",
+                    "tool",
+                    "worker_environment_kind",
+                    "ee_template",
+                    "artifact",
+                    "mark",
+                    "verifier"
+                  ]
+                },
+                "id": {
+                  "$ref": "#/$defs/str"
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected_revision": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "pattern": "^[0-9a-f]{64}$"
+      }
+    },
+    "required": [
+      "source",
+      "entry",
+      "expected_revision"
+    ],
+    "additionalProperties": false,
+    "$defs": {
+      "verified_artifact": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mark",
+          "artifact_label",
+          "verifier"
+        ],
+        "properties": {
+          "mark": {
+            "$ref": "#/$defs/str"
+          },
+          "artifact_label": {
+            "$ref": "#/$defs/str"
+          },
+          "verifier": {
+            "$ref": "#/$defs/str"
+          },
+          "params": {}
+        }
+      },
+      "artifact_ref": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "content"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "array",
+            "minItems": 32,
+            "maxItems": 32,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        }
+      },
+      "ids": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "$ref": "#/$defs/str"
+        }
+      },
+      "str": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

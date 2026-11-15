@@ -1,0 +1,28 @@
+{
+  "schema_version": 3,
+  "id": "world_image_generation",
+  "name": "Image Generation",
+  "description": "Create images from a prompt while working in a task, with the image generation of your ChatGPT plan.",
+  "category": "plugin",
+  "developer": "Octopus",
+  "version": "1.2.0",
+  "icon": "image",
+  "logo": "application-logo.png",
+  "interfaces": [
+    "world_image_generation"
+  ],
+  "artifact_bindings": [
+    {
+      "artifact_id": "artifact-application-image-generation-context",
+      "label": "Image Generation contract"
+    }
+  ],
+  "connection": {
+    "disclosure": [
+      "Connect uses the ChatGPT account signed in on this Mac. Octopus keeps no separate key for Image Generation.",
+      "Tasks you connect can create images from prompts. Prompts go to ChatGPT, and each image counts against your plan's image usage.",
+      "The image comes back only to the task that asked for it, which sees it and can describe or use it.",
+      "Image generation needs a paid ChatGPT plan. To use another account, sign in to ChatGPT with it in Octopus."
+    ]
+  }
+}

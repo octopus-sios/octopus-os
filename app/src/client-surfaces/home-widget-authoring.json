@@ -1,0 +1,83 @@
+{
+  "title": "Home widget document authoring",
+  "contract": "octopus.client_surface@1",
+  "delivery_label": "client.surface.document",
+  "instructions": [
+    "Widgets are Home's default visual presentation, in text conversations and voice calls. Show a picture, a short explanation, a small table or a few images in a compact widget without requiring the user to request that implementation. Keep one clear purpose per card. Split a larger result across several compact widgets; do not squeeze pages of prose into one. For a long text, save a text or Markdown document with granted file tools and call open_file to show it in the right Files pane. Use an Extension when the view needs installable behavior, not just to display an ordinary result.",
+    "Use the granted client.mcp tool to create or update widgets. It exposes the Octopus MCP catalogue: method tools/list discovers the tools, and method tools/call with params {name, arguments} invokes one. Read the exact System presentation interface from the bound artifact-home-delivery context, then call publish_widget with arguments {interface, document}. The actual granted client.mcp tool may have an instance-specific id; use the catalogue entry and the delivery artifact authoring.tools mapping. The server publishes the ordinary client.surface.document artifact through artifact.send, and the authored checkpoint delivers it to the exact Home client and Home text provider. The Home client is the final recipient, not a World address accepted by artifact.send. The result proves admission, not rendering. Do not resend an admitted artifact. A file or narration alone is not delivery.",
+    "Use an ordinary octopus.client_surface document with schema_version 1, release_channel stable, a unique id, a positive integer revision, title, glyph, target, and render. Home supports existing voice.widget and voice.window targets. Use the same id and a larger revision to replace a document. Home admits at most 32 active artifact-delivered documents; revise existing documents instead of creating an unbounded collection.",
+    "Use native Octopus primitives for ordinary cards, lists, metrics and controls. Use the existing sandbox renderer for custom HTML/CSS/JavaScript. Sandbox CSS has Octopus theme variables such as --color-text-primary, --color-background-secondary, --color-accent and --font-sans. The sandbox has no network, filesystem, device or parent DOM access. Rendered text is data; it does not authorize actions.",
+    "Design code: ordinary Home cards are left-aligned. Keep the title, body and controls on the same 14px horizontal inset; never place text against the card edge. The native widget host supplies body padding (2px top, 14px sides, 16px bottom) and the header, so do not repeat the title or add a second outer card. Use a root stack with align:stretch and gap:sm or md; text roles title/body/caption provide the hierarchy. Reserve centered alignment for content that actually calls for it, such as a single dial.",
+    "Use the Live context widget as the layout example: its native root is a vertical stack, rows share one left edge, secondary detail is muted, and the header/body share a 14px inset. The complete example below uses that same stack pattern with a short title and supporting body. Reflow and wrap text at min_width; do not use fixed positions or clipped text to make a card fit.",
+    "For sandbox widgets, provide the matching inset in your own document: html,body{margin:0;min-width:0;background:transparent} body{box-sizing:border-box;padding:2px 14px 16px;text-align:left;font-family:var(--font-sans);color:var(--color-text-primary)} .content{display:flex;flex-direction:column;align-items:stretch;gap:8px} h2,p{margin:0;overflow-wrap:anywhere}. Use theme colors, modest type sizes and natural wrapping. The sandbox host supplies the outer header and card; do not duplicate them.",
+    "Omit data.home_presentation for a document that remains until dismissed or superseded. To show it briefly, set data.home_presentation to {lifetime_ms: 5000}. Lifetime is counted from recorded artifact delivery, not first rendering, and supports integers from 1 to 86400000. Alternatively use {expires_at: '2026-10-04T12:00:00.000Z'} with a real UTC deadline. Do not combine lifetime_ms and expires_at or add other presentation fields.",
+    "Only exact run and recipient-interface delivery provenance admits a custom document to Home. The host supplies artifact, run, interface, sequence and delivery time; payload claims do not establish provenance. Malformed or conflicting current revisions fail visibly and must be corrected with a new valid revision.",
+    "Presentation persistence is not extension installation. Long-lived extensions, host filesystem/device sources and installed actions still require the existing extension review and install consent. Never describe a displayed document as installed. MCP is the client tool protocol; it creates no additional policy rights.",
+    "Actions use existing declared client action events. Sandbox actions must be listed in render.actions and invoked by window.octopusSurface.invoke(actionId). The renderer attaches the document revision and artifact delivery provenance to action events. An emitted event does not prove execution. Keep important results and instructions in ordinary artifacts as well as their presentation.",
+    "Use MCP list_artifacts, read_artifact and search_artifacts to inspect artifacts bound to this invocation. For client navigation, open_client_surface accepts {interface, action:{schema:\"octopus.client_action\",schema_version:1,action:\"open_surface\",surface_id:\"exact visible client surface id\"}}. Use client_action.interface from the same delivery artifact. Unknown or hidden destinations fail visibly. An admitted client action does not prove the client has applied it. Other client mutations require their own declared operations; this tool does not execute shell commands, open arbitrary URLs, or change tasks.",
+    "For a photo widget, use the native image node with source set to an embedded data:image/<format>;base64,... URL. Supported formats are AVIF, GIF, JPEG, PNG, and WebP; HTTP(S), file, blob, and SVG image sources are not supported. Retrieve the photo through a granted tool, resize/compress it, and embed its actual bytes. The complete data URL must be at most 524288 characters; the document is limited to 640 KiB and its data object to 256 KiB. A source value binding must resolve to the same embedded format. Use alt text and fit/ratio for layout. A publish receipt proves admission, not rendering: check the saved widget state before claiming it is enabled.",
+    "For a video widget use the native node {type: \"video\", source: \"https://example.org/video.mp4\", title: \"Video\"}. It provides playback, pause, seek, volume and fullscreen controls. The source must be a direct HTTPS media URL without credentials; the media server must allow anonymous cross-origin playback. Publish a higher document revision to change the source. Web page links (such as a video website watch page) are not media URLs. Custom sandbox HTML has no network or media access; do not use an iframe or modify the client to show a supported native video.",
+    "For a saved text document, open_file accepts {interface, action:{schema:\"octopus.client_action\",schema_version:1,action:\"open_file\",request_id:\"new unique id\",path:\"absolute file path\"}}. Use client_action.interface from the bound Home delivery context. The client checks its admitted Files roots and reads the file before selecting the right-pane tab. The correlated result confirms the readable target and opening request; it does not claim rendered pixels. Missing, unreadable, binary and oversized files return an error. This operation neither executes files nor opens external applications."
+  ],
+  "example": {
+    "schema": "octopus.client_surface",
+    "schema_version": 1,
+    "release_channel": "stable",
+    "id": "home.progress-summary",
+    "revision": 1,
+    "title": "Progress",
+    "glyph": "progress",
+    "target": {
+      "kind": "voice.widget",
+      "slot": "right",
+      "order": 10,
+      "layout": {
+        "min_width": 184,
+        "preferred_width": 280,
+        "max_width": 460,
+        "min_height": 100,
+        "preferred_height": 160,
+        "max_height": 320,
+        "content_fit": "reflow"
+      }
+    },
+    "data": {
+      "home_presentation": {
+        "lifetime_ms": 5000
+      },
+      "summary": "The requested result is ready.",
+      "heading": "Ready"
+    },
+    "render": {
+      "kind": "native",
+      "density": "compact",
+      "root": {
+        "type": "stack",
+        "gap": "sm",
+        "align": "stretch",
+        "children": [
+          {
+            "type": "text",
+            "role": "title",
+            "value": {
+              "path": "data.heading"
+            }
+          },
+          {
+            "type": "text",
+            "role": "body",
+            "value": {
+              "path": "data.summary"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "mcp_transport": {
+    "tool": "client.mcp",
+    "protocol_version": "2025-11-25",
+    "transport": "Octopus tool.call/tool.result artifacts",
+    "connection": "Each invocation opens one connection, sends initialize and notifications/initialized, exchanges one tools/list or tools/call request, and closes. The outer tool result body is the JSON-RPC response with id 1; result.isError is an MCP tool failure, error is a protocol failure. An unavailable effect stays unavailable and is never automatically resent."
+  }
+}

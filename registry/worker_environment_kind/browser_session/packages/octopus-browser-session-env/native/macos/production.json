@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "engine_api": "electron.ownedGuest.v1",
+  "variant": "owned-guest-macos",
+  "source_only": true,
+  "native_compiled": false,
+  "native_accepted": false,
+  "foundation_patch_sha256": "09c3d3b1b38b71b3af132acb64456a4e6a1a3cda2571940eec8c14170070ef2c",
+  "patch": {
+    "path": "patches/electron-45.2.1-owned-guest-production.patch",
+    "sha256": "6a410a8023470626446620eaf9420e0a833cf82cc6f693b8bc0f99ce4eeeccbd"
+  },
+  "build_arguments": {
+    "enable_owned_guest_embedder": true,
+    "target_os": "mac",
+    "electron_vendor_version": "octopus_owned_guest:1",
+    "cc_wrapper": "",
+    "use_remoteexec": false
+  },
+  "native_checks": [
+    "same-webcontents-transfer",
+    "wrong-frame-replay-cancellation",
+    "popup-independent-lifetime",
+    "pre-dom-hidden-capture",
+    "viewport-hidden-capture",
+    "renderer-crash-history",
+    "bfcache-detach-restore",
+    "physical-input-cdp-focus",
+    "native-download-history-guid-restart",
+    "native-navigation-history-enrollment-restart"
+  ],
+  "files": [
+    {
+      "path": "content/browser/web_contents/web_contents_impl.cc",
+      "before_sha256": "e551b400ae68665f06ce6f00807728763192866024be92e1507370d0db0a4199",
+      "after_sha256": "b549d440eed6f734b24d9ba15818289999053e5c9c853902f43cc9b1b3e6a83b"
+    },
+    {
+      "path": "content/browser/web_contents/web_contents_impl.h",
+      "before_sha256": "3e72392bb48eefc9433b931f038994ac46b5f979608e1f0bb58db8c729190240",
+      "after_sha256": "caad85bb2a08df1b814c9ce99241dc12464b44b88120161fae6e66f59d99d8ed"
+    },
+    {
+      "path": "content/public/browser/content_browser_client.cc",
+      "before_sha256": "831a8f847353333323614b093b0916b515f3ecf7c578aace373b13a44342f09b",
+      "after_sha256": "fd8071d6516bfd4d8c68701a70ed25ed4d6910432b9a48b959051c0cc48b1839"
+    },
+    {
+      "path": "content/public/browser/content_browser_client.h",
+      "before_sha256": "a12deaac4d3029c91350485327a4512e5d78edaf199c55b96e667da990aa7bac",
+      "after_sha256": "2e9c966e55823d72fa111ad59f6b39c92e10db4f99f4af27cfb8ce1267588591"
+    },
+    {
+      "path": "electron/buildflags/BUILD.gn",
+      "before_sha256": "89e318662fb56b4706d8eddafb3d616333e4cf735df68b6a744f0f356e9918f8",
+      "after_sha256": "94bc0b31412502141ab55f66403758a358fbffa0a507d41dbc7c87a51e043b22"
+    },
+    {
+      "path": "electron/buildflags/buildflags.gni",
+      "before_sha256": "559f244e94446a351a696767525e72ae05f5728ff9fef306642fac9bb6fcc8b0",
+      "after_sha256": "ad1668a6d7345fa188a5bf31b76ce7c62e46337db544c8490c91e145a1013a13"
+    },
+    {
+      "path": "electron/shell/browser/api/owned_guest_presentation.cc",
+      "before_sha256": "41fd7b2cbdb54963b94d389f905a016c9d7e52979c53d3103a3778bfc106fa64",
+      "after_sha256": "36f4730bd85f34690e53266226c0ce641eadcd469f43568cf1a5682b041f7777"
+    },
+    {
+      "path": "electron/shell/browser/electron_browser_client.cc",
+      "before_sha256": "4ccc0bc71772483c19560b3b5fb486f70fea2e92a9a33a2c79c7211537e63480",
+      "after_sha256": "85677379adec3f5bcea510bc85b7acd986003cee7a99be824043510dcb21a14d"
+    },
+    {
+      "path": "electron/shell/browser/electron_browser_client.h",
+      "before_sha256": "ac38b479e20df9805d9598f7a3e5d6c0735e82449ec3d696029886fea89098fe",
+      "after_sha256": "82056c9cb73a1ebb4eeefc44fe49405cd4adf52661e90ffb22ea69d681b7fdc1"
+    },
+    {
+      "path": "electron/spec/api-owned-guest-spec.ts",
+      "before_sha256": "81b6c71d79ebc68584d30856ece4216296db0971112c9eeeb25806c88de2d55d",
+      "after_sha256": "b858ee6588fb9014c71d62b683fe98cbf287736ba26695b34ed7a68944d6b1fc"
+    }
+  ],
+  "notes": {
+    "default": "GN variant disabled by default. Chromium runtime feature is unchanged. Callback admits only the exact native-owned wrapper; per-WC attachment fact survives wrapper/destructor ordering.",
+    "canonical_release_series": "Receipt requires exact canonical Electron chromium patch series plus the complete final source delta against the pinned commits. Fragment application does not prove release-series composition or native compilation.",
+    "native_history": "Third required held source patch. Native SQLite/GUID reader and Session writer are consumed by the package observer in source. Native core/spec and current consumer tests remain unexecuted; existing bundles and Home are untouched.",
+    "navigation_history": "Fourth required held source patch: optional explicit source collector, actual native commit/title evidence, isolated room Sessions, independent admitted reads. No native build/spec/activation performed."
+  },
+  "canonical_release_patch_list_sha256": "a863f0ce4e5ae23d49957a0223c127dd1eb746d3e1705d38fbd9c43f77de1ca5",
+  "source_prepare": "verifySourceCheckout replays the pinned canonical Electron Chromium patch series plus foundation+production+download-history+navigation-history in private temporary Git indexes AND object stores, using actual base objects read-only as alternates. It compares tracked source composition without changing real indexes/objects. Full checkout dependency preparation/native compilation is still unperformed.",
+  "recipe": {
+    "module": "engine-artifact.cjs",
+    "build_request": {
+      "sourceRoot": "explicit canonical Chromium source root with pinned Electron release dependencies and source patches applied",
+      "outputRoot": "separate empty evidence directory",
+      "architecture": "arm64",
+      "toolchain": {
+        "compiler": "canonical actual Chromium clang++ executable (read back from generated native compile command)",
+        "sdk_settings": "canonical actual SDKSettings.json used by compile -isysroot",
+        "gn": "canonical GN executable",
+        "ninja": "canonical Ninja executable",
+        "python": "canonical Python3 for POSIX compile-command tokenization"
+      }
+    },
+    "phases": [
+      "verify-source validates actual canonical release-source composition",
+      "build runs GN/Ninja and issues compiled-unaccepted candidate tied to actual compiler command and source hashes",
+      "native-spec explicitly executes ONLY the owned native spec with the candidate engine, own temporary profile, no broad upstream cleanup/test flags",
+      "accept validates actual native spec result and separately owner-accepted physical input evidence, then publishes owned-engine.json",
+      "package-macos.cjs requires OCTOPUS_OWNED_ELECTRON_RECEIPT; stock engine is not selected"
+    ],
+    "native_spec_runner_sha256": "58dc0b4ee3bd9ae7545889dc69136473674b844c64a0d70bd778fbd2e3588301",
+    "status": "source implemented; no full checkout composition/build/spec/acceptance performed"
+  },
+  "download_history": {
+    "path": "download-history.json",
+    "sha256": "44ea5a7e5b7fedcf1bbdbe08d8ea5deac3b1c6fd4bf38dbeb679d9a162e75425"
+  },
+  "navigation_history": {
+    "path": "navigation-history.json",
+    "sha256": "4e5029e1011bfe94fede28a24279921a06c94f1e0372385d1b2a3c8f0e525040"
+  }
+}

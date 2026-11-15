@@ -1,0 +1,30 @@
+{
+  "schema": "octopus.local_package",
+  "schema_version": 1,
+  "id": "world_mcp_github",
+  "version": "2.0.0",
+  "product_kind": "application",
+  "product_id": "world_mcp_github",
+  "release_status": "optional",
+  "display": {
+    "name": "GitHub",
+    "description": "Work with repositories, code, issues, pull requests and workflows through the GitHub app connected to your ChatGPT account.",
+    "developer": "Octopus",
+    "category": "plugin",
+    "icon": "github"
+  },
+  "required_packages": [
+    "world_mcp_example"
+  ],
+  "members": [
+    {
+      "registry_kind": "interface",
+      "owner": "world_mcp_github",
+      "primary": true
+    },
+    {
+      "registry_kind": "artifact",
+      "owner": "artifact-application-mcp-github-context"
+    }
+  ]
+}

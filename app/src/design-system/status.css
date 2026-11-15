@@ -1,0 +1,61 @@
+.oc-status {
+  --oc-status-background: transparent;
+  --oc-status-border: var(--color-border);
+  --oc-status-foreground: var(--color-token-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  border: 1px solid var(--oc-status-border);
+  border-radius: 6px;
+  background: var(--oc-status-background);
+  color: var(--oc-status-foreground);
+  font-size: var(--text-xs, 12px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.oc-status__label {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oc-status.oc-tone-muted {
+  --oc-status-foreground: var(--color-token-text-tertiary);
+}
+
+.oc-status.oc-tone-accent,
+.oc-status.oc-tone-success,
+.oc-status.oc-tone-warning,
+.oc-status.oc-tone-danger {
+  min-height: 20px;
+  padding: 0 8px;
+  border-color: transparent;
+  border-radius: 999px;
+}
+
+.oc-status.oc-tone-accent {
+  --oc-status-background: color-mix(in srgb, var(--color-text-accent) 30%, transparent);
+  --oc-status-foreground: var(--color-text-accent);
+}
+
+.oc-status.oc-tone-success {
+  --oc-status-background: color-mix(in srgb, var(--color-text-success) 15%, transparent);
+  --oc-status-foreground: var(--color-text-success);
+}
+
+.oc-status.oc-tone-warning {
+  --oc-status-background: color-mix(in oklab, var(--color-text-warning) 16%, transparent);
+  --oc-status-foreground: var(--color-text-warning);
+}
+
+.oc-status.oc-tone-danger {
+  --oc-status-background: color-mix(in oklab, var(--color-text-error) 16%, transparent);
+  --oc-status-foreground: var(--color-text-error);
+}

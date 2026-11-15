@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "interface": "world_system_review",
+  "activations": [
+    {
+      "enabled": false,
+      "activation_driver_ref": "cron_life",
+      "config": {
+        "schedule": {
+          "interval_seconds": null,
+          "cron": null,
+          "inactivity": {
+            "seconds": 3600,
+            "interface_match": {
+              "interface_type": "world",
+              "role": "user",
+              "interface_driver_ref": "app_server"
+            },
+            "exclude_interface_match": {
+              "interface_driver_ref": "cron_life"
+            }
+          },
+          "fire_on_start": false,
+          "timezone": "UTC",
+          "reminder_env": "",
+          "reminder_default": "Review recent work in Octopus. If something would make the system work better or be more convenient for the user, improve it. Choose the scale yourself: a small change or a large piece of work can both be right. If nothing is worth changing now, change nothing."
+        }
+      }
+    }
+  ]
+}

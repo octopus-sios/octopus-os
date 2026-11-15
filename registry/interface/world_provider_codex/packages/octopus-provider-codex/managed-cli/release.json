@@ -1,0 +1,176 @@
+{
+  "schema_version": 2,
+  "version": "0.166.0",
+  "tag": "rust-v0.166.0",
+  "release_url": "https://github.com/openai/codex/releases/tag/rust-v0.166.0",
+  "source_tag_object": "593389380740f7b4762771573c447ccfdc59742f",
+  "platforms": {
+    "darwin-arm64": {
+      "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-aarch64-apple-darwin.tar.gz",
+      "archive_sha256": "c48824462fc57681eafb0925d97b11b589010475613904f570b42fea53e240d5",
+      "archive_bytes": 107610108,
+      "archive_entry": "codex-aarch64-apple-darwin",
+      "companions": {
+        "codex-code-mode-host": {
+          "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-code-mode-host-aarch64-apple-darwin.tar.gz",
+          "archive_sha256": "7abd50fe5f033495a7b693c45fb82dc57093a18f1c4ba3e8043577de46c5c7c5",
+          "archive_bytes": 24769716,
+          "archive_entry": "codex-code-mode-host-aarch64-apple-darwin"
+        }
+      }
+    },
+    "darwin-x64": {
+      "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-x86_64-apple-darwin.tar.gz",
+      "archive_sha256": "db0c38713c36199b12e7c8d1629386c35a4ce8f99e1c9ce72f1725a74df67b57",
+      "archive_bytes": 117027024,
+      "archive_entry": "codex-x86_64-apple-darwin",
+      "companions": {
+        "codex-code-mode-host": {
+          "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-code-mode-host-x86_64-apple-darwin.tar.gz",
+          "archive_sha256": "b35c775d5e5f8d60d05e0de7154e5bbbf320b6d0e28a3237d42cc8a742ccaf65",
+          "archive_bytes": 26748407,
+          "archive_entry": "codex-code-mode-host-x86_64-apple-darwin"
+        }
+      }
+    },
+    "linux-x64": {
+      "archive_entry": "codex-x86_64-unknown-linux-musl",
+      "archive_bytes": 121764138,
+      "archive_sha256": "a0bf572d2f93f056c6712a6da348e96078dc84f3885fd7be67807ef389cb3978",
+      "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-x86_64-unknown-linux-musl.tar.gz",
+      "companions": {
+        "codex-code-mode-host": {
+          "archive_entry": "codex-code-mode-host-x86_64-unknown-linux-musl",
+          "archive_bytes": 28565521,
+          "archive_sha256": "7588334fd47bc4003d970b70dfd4d1e4578491b1e9baa72976a4c2d7e97590da",
+          "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-code-mode-host-x86_64-unknown-linux-musl.tar.gz"
+        }
+      }
+    },
+    "linux-arm64": {
+      "archive_entry": "codex-aarch64-unknown-linux-musl",
+      "archive_bytes": 113382496,
+      "archive_sha256": "94eb707605ec2646b2e05b7edf7c4e7b3ccf02b16237c34ae9beb8cfb7f810a9",
+      "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-aarch64-unknown-linux-musl.tar.gz",
+      "companions": {
+        "codex-code-mode-host": {
+          "archive_entry": "codex-code-mode-host-aarch64-unknown-linux-musl",
+          "archive_bytes": 27023046,
+          "archive_sha256": "ac98d1f878e353a16cba711fd47bfef2f6c814109bdd819ee2b6b6d6a19701e7",
+          "url": "https://github.com/openai/codex/releases/download/rust-v0.166.0/codex-code-mode-host-aarch64-unknown-linux-musl.tar.gz"
+        }
+      }
+    }
+  },
+  "schemas": {
+    "ClientRequest.json": "0fedfae5919181b6cdf532b0d155813522418c2c1a93214df6760bf6bd77123a",
+    "ServerNotification.json": "aea3f632e93d846119aa80ac6e9b212b08505a5c56d3874db93ec0bb8ad26dc9",
+    "v2/ThreadStartParams.json": "80a40a7fac15b4bf70efb7f893fb353acc0a0d30c68f54aee4f01923deca85de",
+    "v2/ThreadResumeParams.json": "8152ea774ace4eb5623081abd64a1135f28cbff1e73ca641cfb80ac16f6eed32",
+    "v2/TurnStartParams.json": "c7483aee79757d260c4fc1bb5c68b1a8d6f72846388e9f1e88d6f76f423287c8",
+    "v2/TurnSteerParams.json": "202bc34e1f268b69e28c75f2ddd8b4990562eef114aca4663d9596f59d425bf8",
+    "v2/TurnSteerResponse.json": "866ba9a77c12b5d570c837d58f73bf40b24e50fa93404bdf792dd984d313b1aa",
+    "v2/ModelProviderCapabilitiesReadResponse.json": "96979d0111a38cb35a313e111c2f7c449441aee7fd51e1757f2d11c2213d4e77"
+  },
+  "legal": {
+    "LICENSE": {
+      "source_url": "https://raw.githubusercontent.com/openai/codex/rust-v0.166.0/LICENSE",
+      "sha256": "d17f227e4df5da1600391338865ce0f3055211760a36688f816941d58232d8dc"
+    },
+    "NOTICE": {
+      "source_url": "https://raw.githubusercontent.com/openai/codex/rust-v0.166.0/NOTICE",
+      "sha256": "9d71575ecfd9a843fc1677b0efb08053c6ba9fd686a0de1a6f5382fd3c220915"
+    }
+  },
+  "notifications": {
+    "mirrored": [
+      "account/login/completed",
+      "account/rateLimits/updated",
+      "account/updated",
+      "app/list/updated",
+      "autoApprovalReview/strictReviewRequired",
+      "command/exec/outputDelta",
+      "configWarning",
+      "deprecationNotice",
+      "error",
+      "externalAgentConfig/import/completed",
+      "externalAgentConfig/import/progress",
+      "fs/changed",
+      "fuzzyFileSearch/sessionCompleted",
+      "fuzzyFileSearch/sessionUpdated",
+      "guardianWarning",
+      "hook/completed",
+      "hook/started",
+      "item/agentMessage/delta",
+      "item/autoApprovalReview/completed",
+      "item/autoApprovalReview/started",
+      "item/commandExecution/outputDelta",
+      "item/commandExecution/terminalInteraction",
+      "item/completed",
+      "item/fileChange/outputDelta",
+      "item/fileChange/patchUpdated",
+      "item/mcpToolCall/progress",
+      "item/plan/delta",
+      "item/reasoning/summaryPartAdded",
+      "item/reasoning/summaryTextDelta",
+      "item/reasoning/textDelta",
+      "item/started",
+      "mcpServer/event/stream/notification",
+      "mcpServer/oauthLogin/completed",
+      "mcpServer/startupStatus/updated",
+      "model/rerouted",
+      "model/safetyBuffering/updated",
+      "model/verification",
+      "modelProvider/authRecoveryCompleted",
+      "modelProvider/authRecoveryStarted",
+      "process/exited",
+      "process/outputDelta",
+      "remoteControl/status/changed",
+      "serverRequest/resolved",
+      "skills/changed",
+      "thread/archived",
+      "thread/closed",
+      "thread/compacted",
+      "thread/deleted",
+      "thread/environment/connected",
+      "thread/environment/disconnected",
+      "thread/goal/cleared",
+      "thread/goal/updated",
+      "thread/name/updated",
+      "thread/prediction/updated",
+      "thread/readState/changed",
+      "thread/realtime/closed",
+      "thread/realtime/error",
+      "thread/realtime/itemAdded",
+      "thread/realtime/outputAudio/delta",
+      "thread/realtime/sdp",
+      "thread/realtime/started",
+      "thread/realtime/transcript/delta",
+      "thread/realtime/transcript/done",
+      "thread/reverted",
+      "thread/settings/updated",
+      "thread/started",
+      "thread/status/changed",
+      "thread/tokenUsage/updated",
+      "thread/unarchived",
+      "turn/completed",
+      "turn/diff/updated",
+      "turn/moderationMetadata",
+      "turn/plan/updated",
+      "turn/started",
+      "warning",
+      "windows/worldWritableWarning",
+      "windowsSandbox/setupCompleted"
+    ],
+    "opt_out": [
+      "account/gatewayOAuth/changed",
+      "project/changed",
+      "thread/attachment/updated",
+      "thread/project/updated",
+      "thread/queue/changed",
+      "thread/realtime/item/completed",
+      "thread/realtime/item/started",
+      "thread/realtime/item/transcript/delta"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "world_slack",
+  "interface_type": "world",
+  "role": "service",
+  "direction": "bidirectional",
+  "source_names": [
+    "slack"
+  ],
+  "interface_driver_ref": "slack_life",
+  "interface_driver_config": {
+    "private_config": {
+      "environment": {
+        "bot_token_env": "SLACK_BOT_TOKEN",
+        "app_token_env": "SLACK_APP_TOKEN",
+        "allowed_user_ids_env": "SLACK_ALLOWED_USERS",
+        "allowed_channel_ids_env": "SLACK_ALLOWED_CHANNELS",
+        "home_channel_env": "SLACK_HOME_CHANNEL"
+      },
+      "operation_catalog_dir": "operations",
+      "operation_catalog_label": "slack.operation_catalog",
+      "operation_request_label": "slack.operation.request",
+      "client_connection": {
+        "schema_version": 1,
+        "module": "interface://world_slack/packages/connection.cjs"
+      },
+      "task_input_labels": [
+        "slack.event"
+      ]
+    }
+  }
+}

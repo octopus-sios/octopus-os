@@ -1,0 +1,2911 @@
+{
+  "id": "world_provider_stepfun",
+  "interface_type": "world",
+  "role": "provider",
+  "direction": "bidirectional",
+  "source_names": [
+    "stepfun"
+  ],
+  "interface_driver_ref": "codex_app_server",
+  "interface_policy": {
+    "variables": {
+      "max_attempts": {
+        "reduce": "min",
+        "default": 5
+      },
+      "max_in_flight": {
+        "reduce": "min",
+        "default": 1
+      },
+      "web_search_modes": {
+        "reduce": "intersection",
+        "default": [
+          "disabled"
+        ]
+      },
+      "models": {
+        "reduce": "intersection",
+        "default": [
+          "step-5-preview",
+          "step-3.5-flash",
+          "step-3.7-flash"
+        ]
+      }
+    }
+  },
+  "interface_driver_config": {
+    "supported_reasoning_efforts": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "private_config": {
+      "instruction_artifacts": [],
+      "worker_instruction_artifacts": [],
+      "model_tool_names": {},
+      "native_thread_sandbox": "danger-full-access",
+      "approval_policy": "on-request",
+      "native_mcp_resource_discovery": true,
+      "run_affordance_profile": {
+        "catalog": {
+          "label": "context.reference",
+          "text": "These operations compose ordinary Octopus runs through checked file effects. create_run starts a task in one call from the installation defaults. followup_task, send_message and interrupt_run reach a connected run; list_runs shows this run and its connected runs; wait_for_runs waits for their communication. To attach tools, rooms, context or routes to this run, use preview_current_run and then amend_current_run with the same amendment_key and either a change (entries to add or remove) or an explicit complete selection; inspect_authoring shows the current one. To edit the run's future contract directly, send authored: the content_hash your file.read returned and an RFC 6902 patch of that record, never the record itself. preview_run, preview_revision and revise_run work with exact authored files. A new run forms its authority from its own worker ceiling and EE chain; a descriptor on disk alone grants nothing.",
+          "operations": [
+            {
+              "name": "inspect_authoring",
+              "operation": "inspect_authoring",
+              "description": "Show this run's roots, creation defaults, current grant and installed descriptors. Not needed before create_run; use it before amending this run or authoring exact files. Makes no edits.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            },
+            {
+              "name": "preview_current_run",
+              "operation": "preview_current_run",
+              "description": "Preview adding or repairing capabilities on this current run. First inspect_authoring for the complete current selection. Supply every selection field explicitly, or an authored future run_record and its dependency writes. The preview checks real descriptor references, policy formation, each publication stage and preservation of accepted work. It applies no effects. Keep one amendment_key for the matching apply. Send exactly one of selection, change or authored. An authored patch is applied to the checked current record, which must descend from the record you read: pin values the patch depends on with test operations and preserve private continuity, accepted checkpoints and current identity; only the validated future-contract delta is applied.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "amendment_key"
+                ],
+                "not": {
+                  "required": [
+                    "authored",
+                    "publications"
+                  ]
+                },
+                "properties": {
+                  "amendment_key": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "selection": {
+                    "$ref": "#/$defs/entries",
+                    "required": [
+                      "selected_tools",
+                      "selected_worker_environment_kinds",
+                      "door_host_slots",
+                      "external_inputs",
+                      "external_relays",
+                      "model_outputs",
+                      "context_artifact_bindings",
+                      "payload_artifact_bindings"
+                    ],
+                    "description": "The complete selection: every field given explicitly."
+                  },
+                  "publications": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "source",
+                        "entry_id",
+                        "revision"
+                      ],
+                      "properties": {
+                        "source": {
+                          "$ref": "#/$defs/artifact_ref"
+                        },
+                        "entry_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "revision": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      }
+                    },
+                    "description": "Pinned entries from readable bound collections, added to the selection. Each pin selects an exact revision and grants no tools."
+                  },
+                  "authored": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "expected_before_hash",
+                      "patch",
+                      "writes"
+                    ],
+                    "description": "A direct edit of this run's future contract, guarded like a file.write patch.",
+                    "properties": {
+                      "expected_before_hash": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$",
+                        "description": "content_hash returned by the granted file.read of this run."
+                      },
+                      "patch": {
+                        "type": "array",
+                        "minItems": 1,
+                        "description": "RFC 6902 operations on the run record you read.",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "path"
+                          ],
+                          "properties": {
+                            "op": {
+                              "enum": [
+                                "add",
+                                "remove",
+                                "replace",
+                                "move",
+                                "copy",
+                                "test"
+                              ]
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            },
+                            "value": {}
+                          }
+                        }
+                      },
+                      "writes": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "path",
+                            "content",
+                            "expected_before_hash"
+                          ],
+                          "properties": {
+                            "path": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "content": {
+                              "type": "string"
+                            },
+                            "expected_before_hash": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "change": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Entries to add to and remove from the selection inspect_authoring shows; omitted fields name no entries. Every removed entry must be present and every added one absent.",
+                    "properties": {
+                      "add": {
+                        "$ref": "#/$defs/entries"
+                      },
+                      "remove": {
+                        "$ref": "#/$defs/entries"
+                      }
+                    }
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": [
+                      "selection"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "change"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "authored"
+                    ]
+                  }
+                ],
+                "$defs": {
+                  "entries": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "selected_tools": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "tool",
+                            "interface",
+                            "worker_environment_kind"
+                          ],
+                          "properties": {
+                            "tool": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "interface": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "worker_environment_kind": {
+                              "$ref": "#/$defs/str"
+                            }
+                          }
+                        }
+                      },
+                      "selected_worker_environment_kinds": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": {
+                          "$ref": "#/$defs/str"
+                        }
+                      },
+                      "door_host_slots": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "$ref": "#/$defs/str"
+                          }
+                        }
+                      },
+                      "external_inputs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "checkpoint_id",
+                            "interface_id"
+                          ],
+                          "properties": {
+                            "checkpoint_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "interface_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_names": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "$ref": "#/$defs/str"
+                              }
+                            },
+                            "required_verified_artifacts": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/$defs/verified_artifact"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "external_relays": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "checkpoint_id",
+                            "interface_id",
+                            "outbound_interface_ids"
+                          ],
+                          "properties": {
+                            "checkpoint_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "interface_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "outbound_interface_ids": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/$defs/str"
+                              }
+                            },
+                            "required_verified_artifacts": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/$defs/verified_artifact"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "model_outputs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "checkpoint_id",
+                            "interface_id",
+                            "required_verified_artifact"
+                          ],
+                          "properties": {
+                            "checkpoint_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "interface_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "required_verified_artifact": {
+                              "$ref": "#/$defs/verified_artifact"
+                            }
+                          }
+                        }
+                      },
+                      "context_artifact_bindings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "id"
+                          ],
+                          "properties": {
+                            "id": {
+                              "$ref": "#/$defs/str"
+                            }
+                          }
+                        }
+                      },
+                      "payload_artifact_bindings": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/artifact_ref"
+                        }
+                      }
+                    }
+                  },
+                  "verified_artifact": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "mark",
+                      "artifact_label",
+                      "verifier"
+                    ],
+                    "properties": {
+                      "mark": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "artifact_label": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "verifier": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "params": {}
+                    }
+                  },
+                  "artifact_ref": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "content"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "content": {
+                        "type": "array",
+                        "minItems": 32,
+                        "maxItems": 32,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      }
+                    }
+                  },
+                  "str": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            {
+              "name": "amend_current_run",
+              "operation": "amend_current_run",
+              "description": "Apply the same reviewed current-run amendment using ordinary granted file effects and the provider-owned checked run edit. Preserve accepted waits, pending results, writer and provider identity. Add dependencies before activation, then read back the installed run. Newly granted tools and context become available after the final checked result. A partial or refused effect returns evidence for repair; it is never reported as a successful rollback. Send exactly one of selection, change or authored. An authored patch is applied to the checked current record, which must descend from the record you read: pin values the patch depends on with test operations and preserve private continuity, accepted checkpoints and current identity; only the validated future-contract delta is applied.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "amendment_key"
+                ],
+                "not": {
+                  "required": [
+                    "authored",
+                    "publications"
+                  ]
+                },
+                "properties": {
+                  "amendment_key": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "selection": {
+                    "$ref": "#/$defs/entries",
+                    "required": [
+                      "selected_tools",
+                      "selected_worker_environment_kinds",
+                      "door_host_slots",
+                      "external_inputs",
+                      "external_relays",
+                      "model_outputs",
+                      "context_artifact_bindings",
+                      "payload_artifact_bindings"
+                    ],
+                    "description": "The complete selection: every field given explicitly."
+                  },
+                  "publications": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "source",
+                        "entry_id",
+                        "revision"
+                      ],
+                      "properties": {
+                        "source": {
+                          "$ref": "#/$defs/artifact_ref"
+                        },
+                        "entry_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "revision": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      }
+                    },
+                    "description": "Pinned entries from readable bound collections, added to the selection. Each pin selects an exact revision and grants no tools."
+                  },
+                  "authored": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "expected_before_hash",
+                      "patch",
+                      "writes"
+                    ],
+                    "description": "A direct edit of this run's future contract, guarded like a file.write patch.",
+                    "properties": {
+                      "expected_before_hash": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$",
+                        "description": "content_hash returned by the granted file.read of this run."
+                      },
+                      "patch": {
+                        "type": "array",
+                        "minItems": 1,
+                        "description": "RFC 6902 operations on the run record you read.",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "op",
+                            "path"
+                          ],
+                          "properties": {
+                            "op": {
+                              "enum": [
+                                "add",
+                                "remove",
+                                "replace",
+                                "move",
+                                "copy",
+                                "test"
+                              ]
+                            },
+                            "path": {
+                              "type": "string"
+                            },
+                            "from": {
+                              "type": "string"
+                            },
+                            "value": {}
+                          }
+                        }
+                      },
+                      "writes": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "path",
+                            "content",
+                            "expected_before_hash"
+                          ],
+                          "properties": {
+                            "path": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "content": {
+                              "type": "string"
+                            },
+                            "expected_before_hash": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "change": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "description": "Entries to add to and remove from the selection inspect_authoring shows; omitted fields name no entries. Every removed entry must be present and every added one absent.",
+                    "properties": {
+                      "add": {
+                        "$ref": "#/$defs/entries"
+                      },
+                      "remove": {
+                        "$ref": "#/$defs/entries"
+                      }
+                    }
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": [
+                      "selection"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "change"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "authored"
+                    ]
+                  }
+                ],
+                "$defs": {
+                  "entries": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "selected_tools": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "tool",
+                            "interface",
+                            "worker_environment_kind"
+                          ],
+                          "properties": {
+                            "tool": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "interface": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "worker_environment_kind": {
+                              "$ref": "#/$defs/str"
+                            }
+                          }
+                        }
+                      },
+                      "selected_worker_environment_kinds": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": {
+                          "$ref": "#/$defs/str"
+                        }
+                      },
+                      "door_host_slots": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "$ref": "#/$defs/str"
+                          }
+                        }
+                      },
+                      "external_inputs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "checkpoint_id",
+                            "interface_id"
+                          ],
+                          "properties": {
+                            "checkpoint_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "interface_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_names": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "$ref": "#/$defs/str"
+                              }
+                            },
+                            "required_verified_artifacts": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/$defs/verified_artifact"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "external_relays": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "checkpoint_id",
+                            "interface_id",
+                            "outbound_interface_ids"
+                          ],
+                          "properties": {
+                            "checkpoint_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "interface_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "outbound_interface_ids": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/$defs/str"
+                              }
+                            },
+                            "required_verified_artifacts": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/$defs/verified_artifact"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "model_outputs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "checkpoint_id",
+                            "interface_id",
+                            "required_verified_artifact"
+                          ],
+                          "properties": {
+                            "checkpoint_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "interface_id": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "required_verified_artifact": {
+                              "$ref": "#/$defs/verified_artifact"
+                            }
+                          }
+                        }
+                      },
+                      "context_artifact_bindings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "id"
+                          ],
+                          "properties": {
+                            "id": {
+                              "$ref": "#/$defs/str"
+                            }
+                          }
+                        }
+                      },
+                      "payload_artifact_bindings": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/artifact_ref"
+                        }
+                      }
+                    }
+                  },
+                  "verified_artifact": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "mark",
+                      "artifact_label",
+                      "verifier"
+                    ],
+                    "properties": {
+                      "mark": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "artifact_label": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "verifier": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "params": {}
+                    }
+                  },
+                  "artifact_ref": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "content"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "content": {
+                        "type": "array",
+                        "minItems": 32,
+                        "maxItems": 32,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      }
+                    }
+                  },
+                  "str": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            {
+              "name": "preview_run",
+              "operation": "preview_run",
+              "description": "Validate a proposed new run without applying writes. Returns a compact summary. For exact details pass preview_read with a JSON pointer into /authored, /run_contract, /files or /validation. Each page carries JSON text. Continue with next_offset as offset and the returned content_hash. Reuse the same creation_key and proposal to apply.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "creation_key"
+                ],
+                "not": {
+                  "required": [
+                    "authored",
+                    "publications"
+                  ]
+                },
+                "properties": {
+                  "creation_key": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "title": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "text": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "ee_id": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "worker_template_interface_id": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "provider_interface_id": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "model": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "reasoning_effort": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "service_tier": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "client_interface_id": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "artifacts": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/artifact_ref"
+                    }
+                  },
+                  "context_artifacts": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/artifact_ref"
+                    }
+                  },
+                  "worker_environment_kinds": {
+                    "$ref": "#/$defs/ids"
+                  },
+                  "return_interface_ids": {
+                    "$ref": "#/$defs/ids"
+                  },
+                  "tools": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "tool",
+                        "interface",
+                        "worker_environment_kind"
+                      ],
+                      "properties": {
+                        "tool": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "interface": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "worker_environment_kind": {
+                          "$ref": "#/$defs/str"
+                        }
+                      }
+                    }
+                  },
+                  "door_host_slots": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "$ref": "#/$defs/str"
+                      }
+                    }
+                  },
+                  "external_inputs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "checkpoint_id",
+                        "interface_id"
+                      ],
+                      "properties": {
+                        "checkpoint_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "interface_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "artifact_names": {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "$ref": "#/$defs/str"
+                          }
+                        },
+                        "required_verified_artifacts": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/verified_artifact"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "external_relays": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "checkpoint_id",
+                        "interface_id",
+                        "outbound_interface_ids"
+                      ],
+                      "properties": {
+                        "checkpoint_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "interface_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "outbound_interface_ids": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/str"
+                          }
+                        },
+                        "required_verified_artifacts": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/verified_artifact"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "model_outputs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "checkpoint_id",
+                        "interface_id",
+                        "required_verified_artifact"
+                      ],
+                      "properties": {
+                        "checkpoint_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "interface_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "required_verified_artifact": {
+                          "$ref": "#/$defs/verified_artifact"
+                        }
+                      }
+                    }
+                  },
+                  "publications": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "source",
+                        "entry_id",
+                        "revision"
+                      ],
+                      "properties": {
+                        "source": {
+                          "$ref": "#/$defs/artifact_ref"
+                        },
+                        "entry_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "revision": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      }
+                    }
+                  },
+                  "output_selection": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "return_labels",
+                      "record_labels"
+                    ],
+                    "properties": {
+                      "return_labels": {
+                        "$ref": "#/$defs/ids",
+                        "minItems": 1
+                      },
+                      "record_labels": {
+                        "$ref": "#/$defs/ids",
+                        "minItems": 1
+                      }
+                    }
+                  },
+                  "authored": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "run_id",
+                      "writes",
+                      "outgoing_bindings"
+                    ],
+                    "properties": {
+                      "run_id": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "writes": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "path",
+                            "content",
+                            "expected_before_hash"
+                          ],
+                          "properties": {
+                            "path": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "content": {
+                              "type": "string"
+                            },
+                            "expected_before_hash": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          }
+                        }
+                      },
+                      "publication_read_refs": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/artifact_ref"
+                        }
+                      },
+                      "outgoing_bindings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "interface",
+                            "artifact_label",
+                            "artifact_bindings"
+                          ],
+                          "properties": {
+                            "interface": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_label": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_bindings": {
+                              "$ref": "#/$defs/ids"
+                            }
+                          }
+                        }
+                      },
+                      "seed": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "interface_id",
+                          "label",
+                          "payload"
+                        ],
+                        "properties": {
+                          "interface_id": {
+                            "$ref": "#/$defs/str"
+                          },
+                          "label": {
+                            "$ref": "#/$defs/str"
+                          },
+                          "payload": {}
+                        }
+                      }
+                    }
+                  },
+                  "preview_read": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "pointer"
+                    ],
+                    "properties": {
+                      "pointer": {
+                        "type": "string"
+                      },
+                      "offset": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "content_hash": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "anyOf": [
+                  {
+                    "required": [
+                      "text"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "artifacts"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "authored"
+                    ]
+                  }
+                ],
+                "$defs": {
+                  "verified_artifact": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "mark",
+                      "artifact_label",
+                      "verifier"
+                    ],
+                    "properties": {
+                      "mark": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "artifact_label": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "verifier": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "params": {}
+                    }
+                  },
+                  "artifact_ref": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "content"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "content": {
+                        "type": "array",
+                        "minItems": 32,
+                        "maxItems": 32,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      }
+                    }
+                  },
+                  "ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "$ref": "#/$defs/str"
+                    }
+                  },
+                  "str": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            {
+              "name": "create_run",
+              "operation": "create_run",
+              "description": "Start a task: title and text are enough. The installation defaults choose the EE, worker, provider, model, rooms and tools, connect the new run to this one and return its result here. Add ee_id for a project, context_artifacts or publications for bound knowledge, and other fields only when the work needs them. Returns the new run and its admitted assignment; completion arrives later as the task's own return. authored takes a complete explicit run graph instead of the defaults and cannot be mixed with them. client_interface_id names an existing client destination to reuse; omit it to create a new client from the declared default template (it is not a client template or a display title). tools is the exact model-visible tool selection when nonempty; worker environment kinds add no tools to that list and required private authoring tools remain internal. worker_environment_kinds lists the allowed kinds for a nonempty tools list; when tools is empty it selects all permitted tools in those kinds. The new run's own run operations come from its tools list: without artifact.send it has none; with it, list_runs, wait_for_runs, send_message, followup_task and interrupt_run; adding file.write also gives create_run, preview_run, preview_revision and revise_run; adding file.read as well gives preview_current_run and amend_current_run. external_inputs, external_relays and model_outputs are exact authored route selections: omit one to use the declared creation defaults; an empty list selects no routes of that type. publications pins exact revisions of entries from readable bound collections; entry content adds context and grants no tools; omit it to use authored defaults, and an empty list selects no publications. output_selection: omit it to keep the defaults; when given, return_labels and record_labels are both nonempty and disjoint and together own every output label the provider declares, and a label that should not come back to the creator belongs in record_labels.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "not": {
+                  "required": [
+                    "authored",
+                    "publications"
+                  ]
+                },
+                "properties": {
+                  "creation_key": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Short task name shown in Tasks."
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "The self-contained assignment: objective, constraints, what to use, deliverable, how to verify and how to report."
+                  },
+                  "ee_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Project EE for the task; omit for the default EE."
+                  },
+                  "worker_template_interface_id": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "provider_interface_id": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "model": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "reasoning_effort": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "service_tier": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "client_interface_id": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "artifacts": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/artifact_ref"
+                    }
+                  },
+                  "context_artifacts": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/artifact_ref"
+                    }
+                  },
+                  "worker_environment_kinds": {
+                    "$ref": "#/$defs/ids"
+                  },
+                  "return_interface_ids": {
+                    "$ref": "#/$defs/ids"
+                  },
+                  "tools": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "tool",
+                        "interface",
+                        "worker_environment_kind"
+                      ],
+                      "properties": {
+                        "tool": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "interface": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "worker_environment_kind": {
+                          "$ref": "#/$defs/str"
+                        }
+                      }
+                    }
+                  },
+                  "door_host_slots": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "$ref": "#/$defs/str"
+                      }
+                    }
+                  },
+                  "external_inputs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "checkpoint_id",
+                        "interface_id"
+                      ],
+                      "properties": {
+                        "checkpoint_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "interface_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "artifact_names": {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "$ref": "#/$defs/str"
+                          }
+                        },
+                        "required_verified_artifacts": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/verified_artifact"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "external_relays": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "checkpoint_id",
+                        "interface_id",
+                        "outbound_interface_ids"
+                      ],
+                      "properties": {
+                        "checkpoint_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "interface_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "outbound_interface_ids": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/str"
+                          }
+                        },
+                        "required_verified_artifacts": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/verified_artifact"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "model_outputs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "checkpoint_id",
+                        "interface_id",
+                        "required_verified_artifact"
+                      ],
+                      "properties": {
+                        "checkpoint_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "interface_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "required_verified_artifact": {
+                          "$ref": "#/$defs/verified_artifact"
+                        }
+                      }
+                    }
+                  },
+                  "publications": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "source",
+                        "entry_id",
+                        "revision"
+                      ],
+                      "properties": {
+                        "source": {
+                          "$ref": "#/$defs/artifact_ref"
+                        },
+                        "entry_id": {
+                          "$ref": "#/$defs/str"
+                        },
+                        "revision": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      }
+                    }
+                  },
+                  "output_selection": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "return_labels",
+                      "record_labels"
+                    ],
+                    "properties": {
+                      "return_labels": {
+                        "$ref": "#/$defs/ids",
+                        "minItems": 1
+                      },
+                      "record_labels": {
+                        "$ref": "#/$defs/ids",
+                        "minItems": 1
+                      }
+                    }
+                  },
+                  "authored": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "run_id",
+                      "writes",
+                      "outgoing_bindings"
+                    ],
+                    "properties": {
+                      "run_id": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "writes": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "path",
+                            "content",
+                            "expected_before_hash"
+                          ],
+                          "properties": {
+                            "path": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "content": {
+                              "type": "string"
+                            },
+                            "expected_before_hash": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          }
+                        }
+                      },
+                      "publication_read_refs": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/artifact_ref"
+                        }
+                      },
+                      "outgoing_bindings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "interface",
+                            "artifact_label",
+                            "artifact_bindings"
+                          ],
+                          "properties": {
+                            "interface": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_label": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_bindings": {
+                              "$ref": "#/$defs/ids"
+                            }
+                          }
+                        }
+                      },
+                      "seed": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "interface_id",
+                          "label",
+                          "payload"
+                        ],
+                        "properties": {
+                          "interface_id": {
+                            "$ref": "#/$defs/str"
+                          },
+                          "label": {
+                            "$ref": "#/$defs/str"
+                          },
+                          "payload": {}
+                        }
+                      }
+                    }
+                  }
+                },
+                "anyOf": [
+                  {
+                    "required": [
+                      "text"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "artifacts"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "authored"
+                    ]
+                  }
+                ],
+                "$defs": {
+                  "verified_artifact": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "mark",
+                      "artifact_label",
+                      "verifier"
+                    ],
+                    "properties": {
+                      "mark": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "artifact_label": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "verifier": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "params": {}
+                    }
+                  },
+                  "artifact_ref": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "content"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "content": {
+                        "type": "array",
+                        "minItems": 32,
+                        "maxItems": 32,
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        }
+                      }
+                    }
+                  },
+                  "ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "$ref": "#/$defs/str"
+                    }
+                  },
+                  "str": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            {
+              "name": "list_runs",
+              "operation": "list_runs",
+              "description": "Show this run and the runs connected to it, with their receive interfaces, from the current grant and record.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            },
+            {
+              "name": "send_message",
+              "operation": "send_message",
+              "description": "Queue an artifact-backed message for a connected run at its exact receive interface. It starts no turn: a running turn or a wait_for_runs receives it, and an idle run stays idle and sees it only when its next turn starts. To make an idle run act, use followup_task.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "interface"
+                ],
+                "properties": {
+                  "interface": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "artifacts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "content"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "content": {
+                          "type": "array",
+                          "minItems": 32,
+                          "maxItems": 32,
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 255
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "followup_task",
+              "operation": "followup_task",
+              "description": "Send a follow-up to a connected run through its declared receive interface under the current grant. It steers the run's running turn, or starts a turn on an idle run.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "interface"
+                ],
+                "properties": {
+                  "interface": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "artifacts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "content"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "content": {
+                          "type": "array",
+                          "minItems": 32,
+                          "maxItems": 32,
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 255
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "interrupt_run",
+              "operation": "interrupt",
+              "description": "Request interruption through a connected run's declared receive interface; the result proves admission, not that work has stopped.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "interface"
+                ],
+                "properties": {
+                  "interface": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "artifacts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "content"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "content": {
+                          "type": "array",
+                          "minItems": 32,
+                          "maxItems": 32,
+                          "items": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 255
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "wait_for_runs",
+              "operation": "wait",
+              "description": "Wait for admitted run communication without inventing a runtime scheduler or resending work.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "timeout_ms"
+                ],
+                "properties": {
+                  "timeout_ms": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 60000,
+                    "description": "Longest wait of this call, at most 60000 ms. Call wait_for_runs again to keep waiting."
+                  }
+                }
+              }
+            },
+            {
+              "name": "preview_revision",
+              "operation": "preview_revision",
+              "description": "Validate full-file or RFC 6902 edits to an existing peer run without applying writes. Returns a compact summary. For exact details pass preview_read with a JSON pointer into /authored, /run_contract, /files or /validation. Each page carries JSON text. Continue with next_offset as offset and the returned content_hash. Reuse the same creation_key and proposal to apply.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "creation_key",
+                  "authored"
+                ],
+                "properties": {
+                  "creation_key": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "authored": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "run_id",
+                      "writes",
+                      "outgoing_bindings"
+                    ],
+                    "properties": {
+                      "run_id": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "writes": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "path",
+                            "content",
+                            "expected_before_hash"
+                          ],
+                          "properties": {
+                            "path": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "content": {
+                              "type": "string"
+                            },
+                            "expected_before_hash": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          }
+                        }
+                      },
+                      "publication_read_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "id",
+                            "content"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "content": {
+                              "type": "array",
+                              "minItems": 32,
+                              "maxItems": 32,
+                              "items": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 255
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "outgoing_bindings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "interface",
+                            "artifact_label",
+                            "artifact_bindings"
+                          ],
+                          "properties": {
+                            "interface": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_label": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_bindings": {
+                              "$ref": "#/$defs/ids"
+                            }
+                          }
+                        }
+                      },
+                      "seed": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "interface_id",
+                          "label",
+                          "payload"
+                        ],
+                        "properties": {
+                          "interface_id": {
+                            "$ref": "#/$defs/str"
+                          },
+                          "label": {
+                            "$ref": "#/$defs/str"
+                          },
+                          "payload": {}
+                        }
+                      },
+                      "run_patch": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "expected_before_hash",
+                          "patch"
+                        ],
+                        "description": "Patch the existing run without sending its full record. The complete candidate is validated and appended after dependency writes. Mutually exclusive with a full write of the target run.",
+                        "properties": {
+                          "expected_before_hash": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$",
+                            "description": "Exact content_hash returned by the granted file.read of this run."
+                          },
+                          "patch": {
+                            "type": "array",
+                            "minItems": 1,
+                            "description": "RFC 6902 operations on the exact target run. The existing foreign-run validation preserves accepted work and provider continuity.",
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "op",
+                                "path"
+                              ],
+                              "properties": {
+                                "op": {
+                                  "enum": [
+                                    "add",
+                                    "remove",
+                                    "replace",
+                                    "move",
+                                    "copy",
+                                    "test"
+                                  ]
+                                },
+                                "path": {
+                                  "type": "string"
+                                },
+                                "from": {
+                                  "type": "string"
+                                },
+                                "value": {}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "anyOf": [
+                      {
+                        "required": [
+                          "run_patch"
+                        ]
+                      },
+                      {
+                        "properties": {
+                          "writes": {
+                            "minItems": 1
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "preview_read": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "pointer"
+                    ],
+                    "properties": {
+                      "pointer": {
+                        "type": "string"
+                      },
+                      "offset": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "content_hash": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "$defs": {
+                  "ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "$ref": "#/$defs/str"
+                    }
+                  },
+                  "str": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            {
+              "name": "revise_run",
+              "operation": "revise_run",
+              "description": "Apply checked, validated file edits to an existing peer run and its descriptor dependencies. Any part of the run record may change. Optional seed emits through its exact declared interface; without seed, publishes the authored waits. Do not edit the in-flight caller through this operation. Use authored.run_patch with the file.read content_hash and only the required RFC 6902 edits; writes may be empty. Patch results return a compact run summary and exact file hashes, without repeating the full run. A stale hash requires a fresh read.",
+              "input_schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "creation_key",
+                  "authored"
+                ],
+                "properties": {
+                  "creation_key": {
+                    "$ref": "#/$defs/str"
+                  },
+                  "authored": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "run_id",
+                      "writes",
+                      "outgoing_bindings"
+                    ],
+                    "properties": {
+                      "run_id": {
+                        "$ref": "#/$defs/str"
+                      },
+                      "writes": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "path",
+                            "content",
+                            "expected_before_hash"
+                          ],
+                          "properties": {
+                            "path": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "content": {
+                              "type": "string"
+                            },
+                            "expected_before_hash": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          }
+                        }
+                      },
+                      "publication_read_refs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "id",
+                            "content"
+                          ],
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "content": {
+                              "type": "array",
+                              "minItems": 32,
+                              "maxItems": 32,
+                              "items": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 255
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "outgoing_bindings": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "interface",
+                            "artifact_label",
+                            "artifact_bindings"
+                          ],
+                          "properties": {
+                            "interface": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_label": {
+                              "$ref": "#/$defs/str"
+                            },
+                            "artifact_bindings": {
+                              "$ref": "#/$defs/ids"
+                            }
+                          }
+                        }
+                      },
+                      "seed": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "interface_id",
+                          "label",
+                          "payload"
+                        ],
+                        "properties": {
+                          "interface_id": {
+                            "$ref": "#/$defs/str"
+                          },
+                          "label": {
+                            "$ref": "#/$defs/str"
+                          },
+                          "payload": {}
+                        }
+                      },
+                      "run_patch": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "expected_before_hash",
+                          "patch"
+                        ],
+                        "description": "Patch the existing run without sending its full record. The complete candidate is validated and appended after dependency writes. Mutually exclusive with a full write of the target run.",
+                        "properties": {
+                          "expected_before_hash": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$",
+                            "description": "Exact content_hash returned by the granted file.read of this run."
+                          },
+                          "patch": {
+                            "type": "array",
+                            "minItems": 1,
+                            "description": "RFC 6902 operations on the exact target run. The existing foreign-run validation preserves accepted work and provider continuity.",
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "op",
+                                "path"
+                              ],
+                              "properties": {
+                                "op": {
+                                  "enum": [
+                                    "add",
+                                    "remove",
+                                    "replace",
+                                    "move",
+                                    "copy",
+                                    "test"
+                                  ]
+                                },
+                                "path": {
+                                  "type": "string"
+                                },
+                                "from": {
+                                  "type": "string"
+                                },
+                                "value": {}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "anyOf": [
+                      {
+                        "required": [
+                          "run_patch"
+                        ]
+                      },
+                      {
+                        "properties": {
+                          "writes": {
+                            "minItems": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "$defs": {
+                  "ids": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "$ref": "#/$defs/str"
+                    }
+                  },
+                  "str": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "file_write_tool": "file.write",
+        "artifact_send_tool": "artifact.send",
+        "output_selection": {
+          "return_labels": [
+            "interface.artifact.output",
+            "turn.error",
+            "turn.interrupted.result"
+          ],
+          "record_labels": [
+            "turn.input.acknowledged",
+            "interface.context.updated",
+            "tool.call",
+            "turn.control.acknowledged",
+            "turn.control.failed",
+            "operator.approval.request",
+            "operator.elicitation.request",
+            "operator.user_input.request",
+            "provider.models.catalog",
+            "provider.operation.error",
+            "provider.account.login.completed",
+            "provider.account.updated",
+            "provider.account.rate_limits.updated",
+            "provider.account.login.started",
+            "provider.account.login.cancelled",
+            "provider.account.login.status",
+            "provider.account.logged_out",
+            "provider.account.snapshot",
+            "provider.account.rate_limits",
+            "provider.account.rate_limit_reset.consumed",
+            "provider.account.usage",
+            "provider.account.workspace_messages",
+            "provider.account.sessions",
+            "provider.capabilities",
+            "turn.stream",
+            "agent.message.delta",
+            "turn.agent_message",
+            "turn.reasoning",
+            "turn.reasoning.delta",
+            "turn.plan.update",
+            "turn.plan.delta",
+            "turn.exec.command",
+            "turn.exec.output_delta",
+            "turn.exec.terminal_interaction",
+            "turn.file.change",
+            "turn.file.change_delta",
+            "turn.diff.updated",
+            "turn.web_search",
+            "lifecycle.event",
+            "hook.catalog",
+            "hook.catalog.error",
+            "hook.result",
+            "turn.hook.prompt",
+            "turn.mcp.tool_call",
+            "turn.mcp.progress",
+            "turn.mcp.status",
+            "turn.dynamic_tool_call",
+            "turn.collaboration",
+            "turn.subagent.activity",
+            "turn.image.view",
+            "turn.sleep",
+            "turn.image.generation",
+            "turn.review.entered",
+            "turn.review.exited",
+            "turn.context.compaction",
+            "turn.token_usage",
+            "turn.started",
+            "turn.completed",
+            "turn.model.rerouted",
+            "turn.model.verification",
+            "turn.auth_recovery.started",
+            "turn.auth_recovery.completed",
+            "turn.warning",
+            "turn.retrying",
+            "turn.auto_review.started",
+            "turn.auto_review.completed",
+            "turn.operator_request.resolved",
+            "goal.status",
+            "account.rate_limits"
+          ]
+        },
+        "return_to_source": true,
+        "read_root_slots": [
+          "registry_interface_root",
+          "registry_tool_root",
+          "registry_worker_environment_kind_root",
+          "registry_ee_template_root",
+          "registry_artifact_root",
+          "registry_mark_root",
+          "registry_verifier_root",
+          "ee_instances_root",
+          "run_records_root"
+        ],
+        "file_read_tool": "file.read"
+      },
+      "input_intake": {
+        "template_interface_id": "system_service_input"
+      },
+      "input_messages": {
+        "operator.message": {
+          "text_fields": [
+            "text",
+            "prompt"
+          ],
+          "client_context_field": "client_context",
+          "attachments_field": "attachments",
+          "identity_field": "message_id",
+          "identity_required": false
+        },
+        "realtime.delegation": {
+          "text_fields": [
+            "input_text"
+          ],
+          "client_context_field": "client_context",
+          "identity_field": "delegation_id",
+          "identity_required": true,
+          "context_fields": [
+            "call_id",
+            "correlation_id"
+          ],
+          "request_context_fields": {
+            "transcript": "array"
+          }
+        }
+      },
+      "run_authoring_profile": {
+        "file_write_tool": "file.write",
+        "file_write_label": "tool.call",
+        "file_write_result_label": "file.write.result"
+      },
+      "model_hidden_tools": [
+        "file.write",
+        "gui.app_resume",
+        "browser.filechooser_resume",
+        "code_mode.resume"
+      ],
+      "native_tool_namespace": {
+        "name": "formed_interfaces",
+        "description": "Tools admitted through exact Octopus interface grants. Use their advertised methods and schemas. A native Code Mode result is a string: first line compact JSON, then optional image data URLs. Split at the first newline before JSON.parse; forward subsequent image URLs with image(). Tool result JSON carries tool, correlation_id, ok, body and error; interface operations use their declared schema. Inspect the complete returned value in JavaScript and emit selected evidence with text(). Transport failures are errors, never partial success. A model_projection head_tail preview lacks omitted fields. Artifact references do not grant reads, and payload paths are not an access shortcut. Code Mode store/load retain serializable values within the live session; no app/browser SDK is installed here."
+      },
+      "operator_continuity": {
+        "replay_timeout_ms": 30000,
+        "approval": {
+          "request_label": "operator.approval.request",
+          "response_label": "operator.approval.response",
+          "approved": {
+            "mark": "operator.approval",
+            "verifier": "operator_approval"
+          },
+          "denied": {
+            "mark": "operator.input.provided",
+            "verifier": "operator_input"
+          }
+        },
+        "elicitation": {
+          "request_label": "operator.elicitation.request",
+          "response_label": "operator.elicitation.response",
+          "provided": {
+            "mark": "operator.input.provided",
+            "verifier": "operator_input"
+          }
+        },
+        "user_input": {
+          "request_label": "operator.user_input.request",
+          "response_label": "operator.user_input.response",
+          "provided": {
+            "mark": "operator.input.provided",
+            "verifier": "operator_input"
+          }
+        }
+      },
+      "model_catalog": [
+        {
+          "model": "step-5-preview",
+          "display_name": "Step 5 Preview",
+          "description": "Step 5 Preview through StepFun.",
+          "context_window": 1000000,
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "supports_tools": true,
+          "supports_reasoning": true,
+          "default_reasoning_effort": "medium",
+          "supported_reasoning_efforts": [
+            {
+              "effort": "low",
+              "description": "Fast responses with lighter reasoning"
+            },
+            {
+              "effort": "medium",
+              "description": "Balances speed and reasoning depth for everyday tasks"
+            },
+            {
+              "effort": "high",
+              "description": "Greater reasoning depth for complex problems"
+            }
+          ],
+          "show_in_picker": true
+        },
+        {
+          "model": "step-3.5-flash",
+          "display_name": "Step 3.5 Flash",
+          "description": "Step 3.5 Flash through StepFun.",
+          "context_window": 256000,
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "supports_tools": true,
+          "supports_reasoning": true,
+          "default_reasoning_effort": "medium",
+          "supported_reasoning_efforts": [
+            {
+              "effort": "low",
+              "description": "Fast responses with lighter reasoning"
+            },
+            {
+              "effort": "medium",
+              "description": "Balances speed and reasoning depth for everyday tasks"
+            },
+            {
+              "effort": "high",
+              "description": "Greater reasoning depth for complex problems"
+            }
+          ],
+          "show_in_picker": true
+        },
+        {
+          "model": "step-3.7-flash",
+          "display_name": "Step 3.7 Flash",
+          "description": "Step 3.7 Flash through StepFun.",
+          "context_window": 256000,
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "supports_tools": true,
+          "supports_reasoning": true,
+          "default_reasoning_effort": "medium",
+          "supported_reasoning_efforts": [
+            {
+              "effort": "low",
+              "description": "Fast responses with lighter reasoning"
+            },
+            {
+              "effort": "medium",
+              "description": "Balances speed and reasoning depth for everyday tasks"
+            },
+            {
+              "effort": "high",
+              "description": "Greater reasoning depth for complex problems"
+            }
+          ],
+          "show_in_picker": true
+        }
+      ],
+      "model_catalog_operation": {
+        "request_label": "provider.models.list",
+        "output_label": "provider.models.catalog",
+        "default_limit": 100,
+        "max_limit": 100,
+        "include_hidden": false
+      },
+      "model": "step-5-preview",
+      "reasoning_effort": "medium",
+      "reasoning_summary": "auto",
+      "private_thread_cold_start": "resume_compatible",
+      "model_result_projection": {
+        "max_tokens": 10000
+      },
+      "live_stream": {
+        "artifact_label": "turn.stream",
+        "always_stream_labels": [
+          "agent.message.delta",
+          "turn.reasoning.delta",
+          "turn.plan.delta",
+          "turn.exec.output_delta",
+          "turn.file.change_delta",
+          "turn.dynamic_tool_call",
+          "turn.started"
+        ],
+        "active_turn_stream_labels": [
+          "provider.account.rate_limits.updated",
+          "account.rate_limits"
+        ],
+        "phase_rules": [
+          {
+            "label": "turn.reasoning",
+            "field": "lifecycle",
+            "stream_values": [
+              "started"
+            ],
+            "artifact_values": [
+              "completed"
+            ]
+          }
+        ]
+      },
+      "context_output_labels": [
+        "interface.artifact.output",
+        "interface.context.updated",
+        "tool.call",
+        "turn.control.acknowledged",
+        "turn.interrupted.result",
+        "turn.context.compaction",
+        "turn.error",
+        "operator.approval.request",
+        "operator.elicitation.request",
+        "operator.user_input.request",
+        "turn.agent_message",
+        "turn.reasoning",
+        "turn.plan.update"
+      ],
+      "client_projection_output_labels": [
+        "turn.input.acknowledged",
+        "interface.artifact.output",
+        "interface.context.updated",
+        "tool.call",
+        "turn.error",
+        "turn.control.acknowledged",
+        "turn.control.failed",
+        "turn.interrupted.result",
+        "operator.approval.request",
+        "operator.elicitation.request",
+        "operator.user_input.request",
+        "provider.models.catalog",
+        "provider.operation.error",
+        "provider.account.login.completed",
+        "provider.account.updated",
+        "provider.account.rate_limits.updated",
+        "provider.account.login.started",
+        "provider.account.login.cancelled",
+        "provider.account.login.status",
+        "provider.account.logged_out",
+        "provider.account.snapshot",
+        "provider.account.rate_limits",
+        "provider.account.rate_limit_reset.consumed",
+        "provider.account.usage",
+        "provider.account.workspace_messages",
+        "provider.account.sessions",
+        "provider.capabilities",
+        "turn.stream",
+        "agent.message.delta",
+        "turn.agent_message",
+        "turn.reasoning",
+        "turn.reasoning.delta",
+        "turn.plan.update",
+        "turn.plan.delta",
+        "turn.exec.command",
+        "turn.exec.output_delta",
+        "turn.exec.terminal_interaction",
+        "turn.file.change",
+        "turn.file.change_delta",
+        "turn.diff.updated",
+        "turn.web_search",
+        "lifecycle.event",
+        "hook.catalog",
+        "hook.catalog.error",
+        "hook.result",
+        "turn.hook.prompt",
+        "turn.mcp.tool_call",
+        "turn.mcp.progress",
+        "turn.mcp.status",
+        "turn.dynamic_tool_call",
+        "turn.collaboration",
+        "turn.subagent.activity",
+        "turn.image.view",
+        "turn.sleep",
+        "turn.image.generation",
+        "turn.review.entered",
+        "turn.review.exited",
+        "turn.context.compaction",
+        "turn.token_usage",
+        "turn.started",
+        "turn.completed",
+        "turn.model.rerouted",
+        "turn.model.verification",
+        "turn.auth_recovery.started",
+        "turn.auth_recovery.completed",
+        "turn.warning",
+        "turn.retrying",
+        "turn.auto_review.started",
+        "turn.auto_review.completed",
+        "turn.operator_request.resolved",
+        "goal.status",
+        "account.rate_limits"
+      ],
+      "session_snapshot_labels": [
+        "interface.artifact.output",
+        "turn.interrupted.result",
+        "turn.error"
+      ],
+      "process_env_names": [],
+      "opencodex": {
+        "schema_version": 1,
+        "adapter": "openai-chat",
+        "credential_owner_interface": "world_provider_stepfun",
+        "registry_entry": "stepfun",
+        "allow_private_network": false,
+        "limits": {
+          "max_request_bytes": 33554432,
+          "max_translated_call_bytes": 2097152,
+          "max_translated_turn_bytes": 33554432
+        },
+        "model_catalog": {
+          "models": [
+            {
+              "slug": "step-5-preview",
+              "display_name": "Step 5 Preview",
+              "description": "Step 5 Preview through StepFun.",
+              "default_reasoning_level": "medium",
+              "supported_reasoning_levels": [
+                {
+                  "effort": "low",
+                  "description": "Fast responses with lighter reasoning"
+                },
+                {
+                  "effort": "medium",
+                  "description": "Balances speed and reasoning depth for everyday tasks"
+                },
+                {
+                  "effort": "high",
+                  "description": "Greater reasoning depth for complex problems"
+                }
+              ],
+              "shell_type": "shell_command",
+              "visibility": "list",
+              "supported_in_api": true,
+              "priority": 0,
+              "base_instructions": "",
+              "supports_reasoning_summaries": true,
+              "default_reasoning_summary": "auto",
+              "support_verbosity": false,
+              "truncation_policy": {
+                "mode": "tokens",
+                "limit": 10000
+              },
+              "supports_parallel_tool_calls": false,
+              "context_window": 400000,
+              "max_context_window": 1000000,
+              "effective_context_window_percent": 95,
+              "experimental_supported_tools": [],
+              "input_modalities": [
+                "text",
+                "image"
+              ],
+              "supports_search_tool": false,
+              "use_responses_lite": false
+            },
+            {
+              "slug": "step-3.5-flash",
+              "display_name": "Step 3.5 Flash",
+              "description": "Step 3.5 Flash through StepFun.",
+              "default_reasoning_level": "medium",
+              "supported_reasoning_levels": [
+                {
+                  "effort": "low",
+                  "description": "Fast responses with lighter reasoning"
+                },
+                {
+                  "effort": "medium",
+                  "description": "Balances speed and reasoning depth for everyday tasks"
+                },
+                {
+                  "effort": "high",
+                  "description": "Greater reasoning depth for complex problems"
+                }
+              ],
+              "shell_type": "shell_command",
+              "visibility": "list",
+              "supported_in_api": true,
+              "priority": 1,
+              "base_instructions": "",
+              "supports_reasoning_summaries": true,
+              "default_reasoning_summary": "auto",
+              "support_verbosity": false,
+              "truncation_policy": {
+                "mode": "tokens",
+                "limit": 10000
+              },
+              "supports_parallel_tool_calls": false,
+              "context_window": 256000,
+              "max_context_window": 256000,
+              "effective_context_window_percent": 95,
+              "experimental_supported_tools": [],
+              "input_modalities": [
+                "text"
+              ],
+              "supports_search_tool": false,
+              "use_responses_lite": false
+            },
+            {
+              "slug": "step-3.7-flash",
+              "display_name": "Step 3.7 Flash",
+              "description": "Step 3.7 Flash through StepFun.",
+              "default_reasoning_level": "medium",
+              "supported_reasoning_levels": [
+                {
+                  "effort": "low",
+                  "description": "Fast responses with lighter reasoning"
+                },
+                {
+                  "effort": "medium",
+                  "description": "Balances speed and reasoning depth for everyday tasks"
+                },
+                {
+                  "effort": "high",
+                  "description": "Greater reasoning depth for complex problems"
+                }
+              ],
+              "shell_type": "shell_command",
+              "visibility": "list",
+              "supported_in_api": true,
+              "priority": 2,
+              "base_instructions": "",
+              "supports_reasoning_summaries": true,
+              "default_reasoning_summary": "auto",
+              "support_verbosity": false,
+              "truncation_policy": {
+                "mode": "tokens",
+                "limit": 10000
+              },
+              "supports_parallel_tool_calls": false,
+              "context_window": 256000,
+              "max_context_window": 256000,
+              "effective_context_window_percent": 95,
+              "experimental_supported_tools": [],
+              "input_modalities": [
+                "text",
+                "image"
+              ],
+              "supports_search_tool": false,
+              "use_responses_lite": false
+            }
+          ]
+        }
+      }
+    },
+    "residual_ambient": {
+      "transport": "codex_app_server_cli",
+      "status": "declared_residual_not_octopus_authority",
+      "boundary": "Codex app-server has no raw model endpoint. Octopus suppresses known path-loaded ambient and declares the remaining interface-assembled frame as ledger evidence.",
+      "spawn": {
+        "subcommand": "app-server",
+        "managed_cli": {
+          "executable": "interface://world_provider_codex/packages/bin/codex"
+        },
+        "compatibility": {
+          "minimum_version": "0.166.0",
+          "required_features": {
+            "code_mode_host": true,
+            "code_mode_interrupt": true,
+            "incremental_tools": true,
+            "instant_interrupt": true,
+            "plugin_discovery_prefetch": false,
+            "reasoning_effort_override": true
+          }
+        },
+        "extra_argv": [],
+        "isolation_overrides": [
+          "project_doc_max_bytes=0",
+          "suppress_unstable_features_warning=true",
+          "features.shell_tool=false",
+          "features.unified_exec=false",
+          "features.shell_snapshot=false",
+          "features.hooks=false",
+          "features.multi_agent=false",
+          "features.multi_agent_v2=false",
+          "agents.enabled=false",
+          "features.apps=false",
+          "features.plugins=false",
+          "features.memories=false",
+          "features.tool_suggest=false",
+          "features.in_app_browser=false",
+          "features.browser_use=false",
+          "features.browser_use_full_cdp_access=false",
+          "features.browser_use_external=false",
+          "features.computer_use=false",
+          "features.remote_plugin=false",
+          "features.plugin_sharing=false",
+          "features.plugin_discovery_prefetch=false",
+          "features.skill_mcp_dependency_install=false",
+          "features.skill_search=false",
+          "features.mentions_v2=false",
+          "features.guardian_approval=false",
+          "features.tool_call_mcp_elicitation=false",
+          "features.auth_elicitation=false",
+          "features.personality=false",
+          "features.workspace_dependencies=false",
+          "features.cli_daybreak=false",
+          "features.code_mode_host=true",
+          "features.instant_interrupt=true",
+          "features.code_mode_interrupt=true",
+          "features.unified_image_budget=true",
+          "features.image_resize_notice=true",
+          "features.incremental_tools=true",
+          "features.reasoning_effort_override=true",
+          "features.retain_client_tool_outputs=true",
+          "features.mcp_oauth_refresh_coordination=true",
+          "personality=none",
+          "sandbox_mode=read-only",
+          "skills.include_instructions=false",
+          "include_apps_instructions=false",
+          "include_permissions_instructions=false",
+          "features.goals=false",
+          "features.image_generation=false",
+          "features.tool_search=false",
+          "features.search_tool=false",
+          "features.request_permissions_tool=false",
+          "features.sleep_tool=false",
+          "features.current_time_reminder=false",
+          "tools.experimental_request_user_input.enabled=true",
+          "features.default_mode_request_user_input=true",
+          "web_search=disabled"
+        ],
+        "home_env": "CODEX_HOME",
+        "isolated_cwd": "codex-cwd",
+        "connect_on_ready": false,
+        "idle_disconnect_ms": 300000
+      },
+      "residual_sources": [
+        {
+          "name": "codex_core_system_developer_tool_policy",
+          "suppressible_by_current_config": false,
+          "octopus_authority": false
+        },
+        {
+          "name": "codex_env_context_input_item",
+          "fields": [
+            "cwd",
+            "shell",
+            "current_date",
+            "timezone",
+            "filesystem",
+            "permission_profile"
+          ],
+          "suppressible_by_current_config": false,
+          "octopus_authority": false
+        },
+        {
+          "name": "codex_update_plan_tool_spec",
+          "suppressible_by_current_config": false,
+          "octopus_authority": false,
+          "execution_boundary": "interface handler fails closed on server-initiated native tool requests; Octopus tools execute only as artifacts through granted worker-environment interfaces"
+        },
+        {
+          "name": "codex_incremental_tool_declarations",
+          "fields": [
+            "additional_tools"
+          ],
+          "adopted_by": "features.incremental_tools=true",
+          "applies_when": "the selected model uses Responses Lite",
+          "suppressible_by_current_config": true,
+          "octopus_authority": false,
+          "execution_boundary": "the declarations carry the interface-assembled tool catalog; catalog changes append to model history instead of replacing the request tool list"
+        },
+        {
+          "name": "codex_reasoning_effort_configuration_update",
+          "fields": [
+            "configuration_update.reasoning.effort"
+          ],
+          "adopted_by": "features.reasoning_effort_override=true",
+          "applies_when": "the OpenAI provider serves a model that supports reasoning effort updates",
+          "suppressible_by_current_config": true,
+          "octopus_authority": false,
+          "execution_boundary": "the effort is the one Octopus binds for the turn; Codex records a change as a model-history item and keeps the context window's request effort"
+        }
+      ],
+      "suppressed_sources": [
+        "CODEX_HOME/AGENTS.md via curated CODEX_HOME",
+        "repo AGENTS.md/CLAUDE.md via project_doc_max_bytes=0 and repo-free cwd",
+        "non-Octopus product ambient instruction sources via explicit interface config pins",
+        "shell/exec/apply_patch/view_image via empty per-thread environments"
+      ]
+    },
+    "transport": {
+      "base_url": "https://api.stepfun.com/v1",
+      "auth_env_key": "OCTOPUS_PROVIDER_STEPFUN_API_KEY",
+      "auth_header": "Authorization",
+      "auth_value_prefix": "Bearer ",
+      "headers": {},
+      "request_timeout_ms": 600000,
+      "max_response_bytes": 67108864
+    }
+  }
+}

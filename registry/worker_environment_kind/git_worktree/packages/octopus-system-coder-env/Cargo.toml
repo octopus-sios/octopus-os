@@ -1,0 +1,22 @@
+[package]
+name = "octopus-system-coder-env"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+
+octopus-git-sandbox = { package = "octopus-git-sandbox-substrate", path = "../octopus-git-sandbox-substrate" }
+octopus-system-workspace-env = { path = "../../../filesystem_workspace/packages/octopus-system-workspace-env" }
+octopus-tool-door-runtime = { package = "octopus-process-session-tool-runtime", path = "../../../process_session/packages/octopus-process-session-tool-runtime" }
+octopus-tool-handlers = { path = "../../../../../crates/octopus-tool-handlers" }
+octopus-worker-env = { path = "../../../../../crates/octopus-worker-env" }
+
+[dev-dependencies]
+octopus-descriptors = { path = "../../../../../crates/octopus-descriptors" }
+octopus-tool-registry = { path = "../../../../../crates/octopus-tool-registry" }
+tempfile = "3"

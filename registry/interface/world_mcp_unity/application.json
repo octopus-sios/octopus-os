@@ -1,0 +1,44 @@
+{
+  "schema_version": 3,
+  "id": "world_mcp_unity",
+  "name": "Unity MCP",
+  "description": "Work in your open Unity project through the MCP for Unity server on this Mac.",
+  "category": "plugin",
+  "developer": "Octopus",
+  "version": "1.0.2",
+  "icon": "code",
+  "logo": "application-logo.svg",
+  "interfaces": [
+    "world_mcp_unity"
+  ],
+  "artifact_bindings": [
+    {
+      "artifact_id": "artifact-application-mcp-unity-context",
+      "label": "Unity MCP capability contract"
+    },
+    {
+      "artifact_id": "artifact-skill-unity-mcp-orchestrator",
+      "label": "Unity MCP operator guide"
+    }
+  ],
+  "task_capabilities": {
+    "tools": [
+      {
+        "tool": "artifact.send",
+        "interface": "system_room",
+        "worker_environment_kind": "system_room"
+      }
+    ]
+  },
+  "connection": {
+    "disclosure": [
+      "Tasks you connect can inspect and change the scenes, assets, scripts, packages and builds of the Unity project connected to MCP for Unity.",
+      "Octopus talks to the MCP for Unity server at 127.0.0.1:8080 on this Mac and keeps no sign-in for it.",
+      "Open your project in Unity with MCP for Unity set to HTTP Local: it starts that server and connects the Editor. Window \u203a MCP for Unity shows both."
+    ],
+    "help": {
+      "label": "MCP for Unity",
+      "url": "https://github.com/CoplayDev/unity-mcp"
+    }
+  }
+}

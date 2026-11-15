@@ -1,0 +1,301 @@
+{
+  "label": "context.reference",
+  "id": "artifact-home-task-authoring",
+  "description": "Create and connect Tasks through their owning records and routes.",
+  "text": "Start a Task with create_run and a self-contained assignment: {\"title\":\"short name\",\"text\":\"objective, relevant context and desired result\"}. Use the current operation schema for optional placement, model, capabilities and context. The task's worker and EE determine its authority. Continue related work with followup_task; use interrupt_run when it should stop. A created task reports its result later through its declared return route.\n\nChoose the topology from the work. Find where the input arrives, which run should act, and who needs its result. Inspect existing arrangements when they may already provide that behavior. The manual_authoring field covers changing those connections; run_record_schema is the record format. Read the parts needed for the change, including the installed owners' contracts when their private state is involved.\n\nUse preview_run for proposed topology and formation checks. When the assignment includes delivery, follow the receiving route to its result.\n",
+  "manual_authoring": "Start from the desired behavior and current installed state. Use the bound run coordinates to locate the records and owner packages you need. A remembered example can suggest where to look; the current tool schemas, source and declarations decide what will work here.\n\nFollow the relevant path in both directions: the input that starts work, the worker and provider that handle it, the tool or other run it reaches, and the result expected by the consumer. Look for existing routes or capabilities that make a new one unnecessary. A refusal or missing result may originate before or after the place that displays the error. Inspect neighboring bindings, pending effects and the owner's retained state when they can explain it. Keep the investigation proportional to the uncertainty.\n\nPrefer a composition operation when it expresses the intended change. Its current schema describes input, relay, model-output and capability selections. For an authored file plan, read the record schema and the contracts of the owners being changed. A checkpoint is one part of that contract. For the installed provider, provider-bound output checkpoints also belong to interface_state.<provider>.frontier_checkpoint_ids and run_authoring_binding.checkpoints. Keep the active route, its owner and future authoring template consistent. Other interfaces may retain different related state; discover it from their declarations rather than assuming the provider's layout is universal.\n\nResolve identities, paths and artifact references from current evidence. Bind the readable roles and context required by the participants. Placement and worker policy determine the new run's grant; context text and the initiating run do not extend it. Code imports reuse implementation without sharing interface identity. Preserve unrelated fields and already admitted work. Use the file tool's observed preimage to protect an existing edit, or expected_before_hash:null for a new file. An ordered batch can partially apply; use its actual result before deciding what to do next.\n\nCheck the behavior being changed using the relevant owner result: saved configuration for a configuration change, or the receiving run's result for delivery. A scheduled wait can remain armed until its event arrives.\n\nGive the receiving run enough context to work independently and an explicit return path. Send an assignment only after its route exists. An admitted send is not the recipient's reply, and uncertainty is not a reason to repeat an effect. Report the result through the intended recipient, preserving private reasoning and unrelated traces. Keep reusable knowledge about the mechanism and the conditions under which it worked.\n",
+  "authoring_examples": {
+    "scope": "Operation examples only. Resolve optional fields and exact references from the current installed schema.",
+    "create_task": {
+      "title": "Investigate the reported failure",
+      "text": "Find the cause in the affected owner, make the authorized change and report the result with relevant verification."
+    },
+    "checked_new_file": {
+      "path": "<granted absolute path>",
+      "content": "<complete authored content>",
+      "expected_before_hash": null
+    },
+    "checked_existing_file": {
+      "path": "<granted absolute path>",
+      "content": "<complete replacement>",
+      "expected_before_content": "<exact observed bytes>"
+    }
+  },
+  "run_record_schema": {
+    "source": "schemas/run_record.schema.json",
+    "hash_algorithm": "sha256",
+    "source_hash": "61578354574b5fda6b1f38f41c6b9b27e42fcc506e92d548c9193b2c1e56e901",
+    "document": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RunRecord",
+      "type": "object",
+      "required": [
+        "active_checkpoints",
+        "checkpoints",
+        "ee",
+        "id",
+        "status",
+        "trace",
+        "worker"
+      ],
+      "properties": {
+        "active_checkpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "checkpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CheckpointRecord"
+          }
+        },
+        "ee": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "interface_state": {
+          "default": {},
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "running",
+            "idle"
+          ]
+        },
+        "trace": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "[^\\u0009-\\u000d\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]"
+        },
+        "worker": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "definitions": {
+        "ArtifactAccess": {
+          "type": "object",
+          "properties": {
+            "change": {
+              "default": false,
+              "type": "boolean"
+            },
+            "create": {
+              "default": false,
+              "type": "boolean"
+            },
+            "delete": {
+              "default": false,
+              "type": "boolean"
+            },
+            "read": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "ArtifactBinding": {
+          "description": "POLICY.md §4 — an artifact binding is the run's authored declaration of its object-level rights on a specific artifact. The `id` names the artifact; the `access` states which of read/change/create/delete the run claims on it (default: read only — a bound artifact is readable context). Formation masks this down to the worker-interface + EE verb ceiling; the interface-binding (the default flow) is a separate axis on the checkpoint.",
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "access": {
+              "default": {
+                "change": false,
+                "create": false,
+                "delete": false,
+                "read": true
+              },
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ArtifactAccess"
+                }
+              ]
+            },
+            "id": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "AuthoredInterfaceBinding": {
+          "type": "object",
+          "required": [
+            "config",
+            "interface"
+          ],
+          "properties": {
+            "config": {
+              "$ref": "#/definitions/InterfaceBindingConfig"
+            },
+            "interface": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "BindingArtifactPolicy": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "mode"
+              ],
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "all"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "mode",
+                "names",
+                "namespaces"
+              ],
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "allow"
+                  ]
+                },
+                "names": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "namespaces": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "CheckpointRecord": {
+          "type": "object",
+          "required": [
+            "epoch",
+            "id",
+            "run",
+            "trace"
+          ],
+          "properties": {
+            "artifact_bindings": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ArtifactBinding"
+              }
+            },
+            "epoch": {
+              "$ref": "#/definitions/GrantEpoch"
+            },
+            "id": {
+              "type": "string"
+            },
+            "interface_binding": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/AuthoredInterfaceBinding"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "outbound_interface_bindings": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AuthoredInterfaceBinding"
+              }
+            },
+            "required_verified_artifacts": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/RequiredVerifiedArtifact"
+              }
+            },
+            "run": {
+              "type": "string"
+            },
+            "trace": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "[^\\u0009-\\u000d\\u0020\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]"
+            }
+          },
+          "additionalProperties": false
+        },
+        "GrantEpoch": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "InterfaceBindingConfig": {
+          "type": "object",
+          "required": [
+            "artifact_policy"
+          ],
+          "properties": {
+            "artifact_policy": {
+              "$ref": "#/definitions/BindingArtifactPolicy"
+            }
+          },
+          "additionalProperties": false
+        },
+        "RequiredVerifiedArtifact": {
+          "type": "object",
+          "required": [
+            "artifact_label",
+            "mark",
+            "verifier"
+          ],
+          "properties": {
+            "artifact_label": {
+              "type": "string"
+            },
+            "mark": {
+              "type": "string"
+            },
+            "params": {
+              "default": null
+            },
+            "verifier": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    "validation_source": "crates/octopus-runtime/src/run_record.rs::RunRecord::validate_artifact_arrival_shape",
+    "derivation": "document is an exact copy of the generated source schema. The exporter includes the status and nonblank run/checkpoint trace constraints enforced by validation_source. Cross-record identity, active checkpoint bindings, policy and registry references are validated by the actual candidate validator."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "world_memory_cron",
+  "interface_type": "world",
+  "role": "sensor",
+  "direction": "inbound",
+  "source_names": [
+    "cron"
+  ],
+  "interface_driver_ref": "cron_life",
+  "interface_driver_config": {
+    "host_slots": {
+      "timezone_database_root": {
+        "path": "/usr/share/zoneinfo"
+      }
+    }
+  },
+  "copy_of": "world_cron"
+}

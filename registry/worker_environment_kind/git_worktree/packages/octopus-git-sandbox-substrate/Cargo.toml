@@ -1,0 +1,27 @@
+[package]
+name = "octopus-git-sandbox-substrate"
+edition = "2024"
+version.workspace = true
+license.workspace = true
+rust-version = "1.85"
+
+[lib]
+name = "octopus_git_sandbox"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+octopus-worker-env = { path = "../../../../../crates/octopus-worker-env" }
+octopus-workspace-substrate = { path = "../../../filesystem_workspace/packages/octopus-workspace-substrate" }
+blake3.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing = { version = "0.1.44", features = ["log"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.182"
+
+[dev-dependencies]
+octopus-descriptors = { path = "../../../../../crates/octopus-descriptors" }
+tempfile = "3.23.0"
+tokio = { workspace = true, features = ["macros", "rt"] }

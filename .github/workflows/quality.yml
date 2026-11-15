@@ -1,0 +1,454 @@
+name: quality
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "README.md"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_INCREMENTAL: "0"
+  RUSTC_WRAPPER: sccache
+  SCCACHE_GHA_ENABLED: "true"
+
+jobs:
+  client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install client dependencies without native rebuild
+        working-directory: app
+        run: npm ci --ignore-scripts
+
+      - name: Client source and contract checks
+        working-directory: app
+        run: |
+          npx tsc --noEmit --incremental false
+          npm run check:design-system
+          npm run test:chat-trace-contracts
+          npm run test:chat-composer-contracts
+          npm run test:agent-templates
+          npm run test:files-contracts
+          npm run test:workspace-setup
+          node --test scripts/test-chatgpt-account.cjs scripts/test-client-provider-metadata.cjs
+          node --test scripts/test-application-connection.cjs
+          node scripts/test-home-experience.cjs
+          node scripts/test-home-voice-contracts.cjs
+          node --test scripts/test-dashboard-presentation.cjs scripts/test-topology-performance.cjs
+          node scripts/test-task-environment-summary.cjs
+          node scripts/test-client-turn-queue.cjs
+          node scripts/test-client-artifact-delivery.cjs
+          node scripts/test-command-delivery.cjs
+          node scripts/test-steering-input-receipts.cjs
+          node scripts/test-chat-receipt-state.cjs
+          node scripts/test-chat-message-projection.cjs
+          node scripts/test-chat-message-list.cjs
+          node scripts/test-chat-workspace.cjs
+          node scripts/test-message-tooltip.cjs
+          node scripts/test-chat-thread-header.cjs
+          node scripts/test-client-agents.cjs
+          node scripts/test-project-policy.cjs
+          node scripts/test-subagent-activity.cjs
+          node scripts/test-task-summary.cjs
+          node scripts/test-electron-main.cjs
+          node --test scripts/test-atomic-json-file.cjs
+          node --test scripts/test-client-storage-health.cjs
+          node --test scripts/test-client-support.cjs
+          node scripts/test-client-support-dom.mjs
+          node scripts/test-dev-server.cjs
+          node scripts/test-client-boot.cjs
+          node scripts/test-chat-view.cjs
+          node scripts/test-client-launch.cjs
+          node scripts/test-home-view.cjs
+          node scripts/test-composer-dictation.cjs
+          node --test scripts/test-client-dictation-stream.cjs scripts/test-composer-dictation-editor.cjs
+          node --test scripts/test-client-dictation.cjs
+          node scripts/test-application-repair.cjs
+          node scripts/test-chat-provider-catalog.cjs
+          node scripts/test-composer-agent-controls.cjs
+          node scripts/test-chat-surfaces.cjs
+          node scripts/test-operator-shell.cjs
+          node scripts/test-sidebar.cjs
+          node scripts/test-stylesheet-contracts.cjs
+          node scripts/test-browser-surface.cjs
+          node --test scripts/test-client-browser.cjs
+          node scripts/test-resume-glyph-parity.cjs
+          node scripts/test-client-catalog-cycle.cjs
+          node scripts/test-shell-pane-chrome.cjs
+          node --test scripts/test-workspace-pane-state.cjs
+          node scripts/test-command-activity.cjs
+
+      - name: Client package and lifecycle contracts
+        working-directory: app
+        run: |
+          node --test scripts/support/native-publication.test.cjs
+          node scripts/test-local-packages.cjs --consent-recipe
+          node scripts/test-safe-self-update.cjs
+          node --test scripts/test-cli-target.cjs scripts/test-cli-package.cjs
+          node scripts/test-client-extensions.cjs
+          node scripts/test-client-extension-authoring.cjs
+
+      - name: Client interaction and file contracts
+        working-directory: app
+        run: |
+          node scripts/test-client-navigation.cjs
+          node scripts/test-client-context-menu.cjs
+          node scripts/test-client-interface-contracts.cjs
+          node scripts/test-client-window-close.cjs
+          node scripts/test-model-picker.cjs
+          node scripts/test-model-picker-dom.mjs
+          node scripts/test-agent-selection.cjs
+          node scripts/test-files-engine.cjs
+          node scripts/test-files-lifecycle.cjs
+          node scripts/test-mark-activity.cjs
+          node scripts/test-client-actions.cjs
+          node scripts/test-client-experiments.cjs
+          node scripts/test-projection-invalidation.cjs
+          node scripts/test-air-hand-control.cjs
+          node scripts/test-scheduled-ui.cjs
+          node scripts/test-markdown-presentation.mjs
+
+      - name: Interface package source contracts
+        run: |
+          node registry/interface/world_operator_chat/test_client_outbound.cjs
+          node registry/interface/world_operator_chat/test_planned_artifact_write.cjs
+          node registry/interface/world_operator_chat/test_publication.cjs
+          node registry/interface/world_operator_chat/test_home_state.cjs
+          node registry/interface/world_operator_chat/test_maintenance_client.cjs
+          python3 registry/verifier/tool_result_correspondence/tests/test_verify.py
+          python3 registry/interface/world_slack/tests/test_slack_contract.py
+          node registry/interface/world_slack/tests/test_connection.cjs
+          node registry/interface/world_mcp_example/packages/octopus-mcp-client/test_connection.cjs
+          node registry/interface/world_image_generation/packages/octopus-image-generation-interface/test_connection.cjs
+          node --test registry/interface/world_gmail/tests/test_connection.cjs
+          node --test registry/interface/world_mcp_example/packages/octopus-mcp-client/test_chatgpt_apps.cjs
+          python3 registry/interface/world_telegram/tests/test_telegram_contract.py
+          node registry/interface/world_telegram/tests/test_connection.cjs
+          python3 registry/interface/world_email/tests/test_email_contract.py
+          node --test registry/interface/world_email/tests/test_connection.cjs
+          python3 -m unittest discover -s registry/interface/world_cron/tests -p 'test_*.py'
+          python3 -m unittest discover -s registry/interface/world_github_issues/tests -p 'test_*.py'
+          python3 -m unittest discover -s registry/interface/world_github_watch/tests -p 'test_*.py'
+          python3 -m unittest discover -s registry/interface/world_quiet_watch/tests -p 'test_*.py'
+          node registry/worker_environment_kind/desktop_session/packages/octopus-system-gui-env/native/configure-transport.test.cjs
+          node registry/worker_environment_kind/browser_session/packages/octopus-browser-session-env/native/setup-host.test.cjs
+          node registry/worker_environment_kind/browser_session/packages/octopus-browser-session-env/native/tests/engine-mode.test.cjs
+          node registry/worker_environment_kind/browser_session/packages/octopus-browser-session-env/native/tests/standard-history.test.cjs
+
+      - name: Standalone agent-ready-radar contracts
+        run: python3 -m unittest discover -s examples/agent-ready-radar/tests -p 'test_*.py'
+
+      - name: Public source boundary
+        run: node app/scripts/check-public-source.cjs
+
+  provider-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: registry/interface/world_provider_codex/packages/octopus-provider-codex/opencodex-bridge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: registry/interface/world_provider_codex/packages/octopus-provider-codex/opencodex-bridge/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RUSTC_WRAPPER: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Production and shipped npm advisories against the declared lockfiles
+        run: node app/scripts/check-dependency-audit.cjs
+
+      - name: Install Rust toolchain
+        if: ${{ !cancelled() }}
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependency advisory checker
+        id: cargo-deny
+        if: ${{ !cancelled() }}
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny@0.20.2
+
+      - name: Cargo.lock advisories against deny.toml
+        if: ${{ !cancelled() && steps.cargo-deny.outcome == 'success' }}
+        run: cargo deny --locked check advisories
+
+      - name: Container room helper Cargo.lock advisories against its deny.toml
+        if: ${{ !cancelled() && steps.cargo-deny.outcome == 'success' }}
+        working-directory: registry/worker_environment_kind/container_session/packages/octopus-container-room/helper
+        run: cargo deny --locked check advisories
+
+  workspace-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux audio headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libasound2-dev
+
+      - name: Compiler cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Workspace check (fail-closed, no degraded compile)
+        run: cargo check --workspace --all-targets --keep-going
+
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux audio headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libasound2-dev
+
+      - name: Compiler cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install test runner
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      - name: Policy, ledger proof, runtime checkpoint, Home binding and file publication contracts
+        run: |
+          cargo nextest run --locked -p octopus-policy -p octopus-ledger-index -p octopus-runtime -p octopus-operator-chat-client -p octopus-model-context-render -p octopus-file-storage --lib --test instructions --test gate_trace_properties -E 'package(octopus-policy) | package(octopus-ledger-index) | package(octopus-runtime) | binary(instructions) | (package(octopus-operator-chat-client) & (test(real_registry_home_plan_exports_authoring_and_exact_policy_requirements) | test(real_registry_self_improvement_ee_admits_the_default_task))) | (package(octopus-file-storage) & test(/^publication::tests::/))'
+
+      - name: Interface executable freshness and receipt checks
+        run: cargo nextest run --locked -p octopus-interface-transport --lib -E 'test(imported_executable_receipt_) | test(life_fingerprint_) | test(reconciliation_reads_)'
+
+      - name: Ledger readers wake on changes, not on their own reads
+        run: cargo nextest run --locked -p octopus-process-session-tool-runtime --lib -E 'test(reading_the_ledger_does_not_wake_its_readers) | test(deferred_decode_preserves_prepared_sources)'
+
+      - name: Standalone mcp-identity-guard contracts
+        run: cargo test --manifest-path examples/mcp-identity-guard/Cargo.toml --locked
+
+      - name: Web search and extraction contracts
+        run: cargo test --locked -p octopus-web-search-env --lib
+
+      - name: Runtime and product dependency boundaries
+        run: cargo test --locked -p octopus-app --test architecture_dependency_guard -- --exact production_roots_keep_registry_implementation_boundaries worker_environment_kind_packages_link_neither_runtime_nor_app_server
+
+      - name: Coder and workspace command ownership and continuity
+        run: |
+          cargo test --locked -p octopus-system-coder-env -p octopus-system-workspace-env --lib keep_kind_owned_command_routing
+          cargo test --locked -p octopus-system-workspace-env --test persistent_process_keeper a_room_command_outlives_its_tool_process_and_the_next_one_receives_its_exact_outcome -- --exact
+
+      - name: File tools write and read only under their declared roots, beside a root that does not resolve
+        run: cargo test --locked -p octopus-system-room-env --lib --test tool_process_lifecycle -- file_write_process read_evidence_and_paged_listing_respect_exact_room_roots file_tools_refuse_a_path_under_an_exposed_root_their_descriptor_does_not_declare
+
+      - name: Registry and context artifact freshness
+        run: cargo nextest run --locked -p octopus-app-server --lib -E 'test(context_artifact_cache::) | test(registry_fingerprint_tracks_same_size_) | test(registry_observation_)'
+
+      - name: Rejected verifier arrivals remain replayable
+        run: cargo test --locked -p octopus-app-server --lib arrival::tests::replay_recovers_only_the_exact_marked_checkpoint_generation -- --exact
+
+      - name: MCP operations and optional reasoning model catalogues
+        run: |
+          cargo test --locked -p octopus-mcp-client --lib every_remote_mcp_operation_is_interface_local_and_strictly_loadable
+          cargo test --locked -p octopus-operator-chat-client --lib every_registry_provider_catalog_admits_its_default_model_and_effort
+
+  native-client:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install client dependencies without native rebuild
+        working-directory: app
+        run: npm ci --ignore-scripts
+
+      - name: Prepare pinned client native headers
+        run: |
+          headers="$(node app/native/runtime.cjs headers)"
+          echo "OCTOPUS_NATIVE_NODE_HEADERS=$headers" >> "$GITHUB_ENV"
+
+      - name: Build the client filesystem module
+        run: node app/native/build.cjs
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Compiler cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Cache the pinned managed provider executable
+        uses: actions/cache@v4
+        with:
+          path: registry/interface/world_provider_codex/packages/bin
+          key: managed-codex-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('registry/interface/world_provider_codex/packages/octopus-provider-codex/managed-cli/release.json', 'registry/interface/world_provider_codex/packages/octopus-provider-codex/managed-cli/bootstrap.cjs') }}
+
+      - name: Build the topology planner and input intake life
+        run: cargo build --locked -p octopus-operator-chat-client --bin octopus-operator-chat-topology -p octopus-provider-codex --bin octopus-input-intake-life
+
+      - name: Prepare the declared managed provider executable
+        run: node registry/interface/world_provider_codex/packages/octopus-provider-codex/managed-cli/bootstrap.cjs materialize --destination "$PWD/registry/interface/world_provider_codex/packages/bin"
+
+      - name: Local package lifecycle and fresh Home setup through the real topology planner
+        run: |
+          mkdir -p registry/interface/world_provider_codex/packages/octopus-provider-codex/intake/life-bin
+          install -m 755 target/debug/octopus-input-intake-life registry/interface/world_provider_codex/packages/octopus-provider-codex/intake/life-bin/octopus-input-intake-life
+          node app/scripts/test-local-packages.cjs
+          node app/scripts/test-local-package-closure.cjs --topology-binary target/debug/octopus-operator-chat-topology
+          node app/scripts/test-local-package-closure.cjs --bounded-agent-preset target/debug/octopus-operator-chat-topology
+
+      - name: Client setup and terminal contracts
+        run: |
+          node app/scripts/test-client-setup.cjs
+          npm --prefix app run test:cli
+
+  native-contracts:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install client dependencies without native rebuild
+        working-directory: app
+        run: npm ci --ignore-scripts
+
+      - name: Prepare pinned client native headers
+        run: |
+          headers="$(node app/native/runtime.cjs headers)"
+          echo "OCTOPUS_NATIVE_NODE_HEADERS=$headers" >> "$GITHUB_ENV"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Compiler cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install test runner
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      - name: Install declared OCR verifier executable
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+          HOMEBREW_NO_INSTALL_CLEANUP: "1"
+        run: brew install tesseract
+
+      - name: Interface executable freshness and receipt checks
+        run: cargo nextest run --locked -p octopus-interface-transport --lib -E 'test(imported_executable_receipt_) | test(life_fingerprint_) | test(reconciliation_reads_)'
+
+      - name: Package verifier, Home admission, provider recovery and voice contracts
+        run: |
+          cargo nextest run --locked -p octopus-app-server -p octopus-operator-chat-client -p octopus-run-authoring -p octopus-provider-codex -p octopus-realtime-signaling --lib --test worker_interface_cross_run_fan_out --test conditioned_publication --test run_composition --test checked_input_writers --test notification_coverage -E 'not binary(run_composition) | test(input_revision_cli_preserves_payload_intent_and_requires_checked_writer_results)'
+
+      - name: Projected evidence reaches the observer provider
+        run: cargo test --locked -p octopus-operator-chat-client --test maintenance_observer movement_gate::scripted_provider_request_receives_exact_projected_evidence -- --exact
+
+  tool-continuations:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    env:
+      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+      CARGO_PROFILE_TEST_OPT_LEVEL: "1"
+      CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Compiler cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install test runner
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest
+
+      - name: Tool receipt and Code Mode continuation contracts
+        run: |
+          cargo nextest run --locked -p octopus-process-session-tool-runtime -p octopus-code-mode-room --lib

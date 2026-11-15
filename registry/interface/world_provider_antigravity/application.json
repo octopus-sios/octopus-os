@@ -1,0 +1,23 @@
+{
+  "schema_version": 3,
+  "id": "world_provider_antigravity",
+  "name": "Antigravity",
+  "description": "Gemini through your Antigravity subscription, served by Google's official Antigravity ACP server.",
+  "category": "provider",
+  "developer": "Google",
+  "version": "1.0.0",
+  "icon": "sparkles",
+  "logo": "application-logo.svg",
+  "interfaces": [
+    "world_provider_antigravity"
+  ],
+  "setup": {
+    "fields": []
+  },
+  "connection": {
+    "disclosure": [
+      "Connect downloads Google's official Antigravity ACP server and signs in with your Google account in the browser; model calls use its Antigravity subscription.",
+      "Google's server keeps its own default instructions ahead of the instructions Octopus sends, and its built-in tools stay turned off."
+    ]
+  }
+}

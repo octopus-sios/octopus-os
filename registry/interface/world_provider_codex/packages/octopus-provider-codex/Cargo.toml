@@ -1,0 +1,77 @@
+[package]
+name = "octopus-provider-codex"
+edition = "2024"
+version.workspace = true
+license.workspace = true
+rust-version = "1.85"
+
+[lib]
+name = "octopus_provider_codex"
+path = "src/lib.rs"
+doctest = false
+
+[[bin]]
+name = "octopus-provider-codex-life"
+path = "src/bin/life.rs"
+
+[[bin]]
+name = "octopus-input-intake-life"
+path = "src/bin/input_intake_life.rs"
+
+[[bin]]
+name = "octopus-provider-opencodex-life"
+path = "src/bin/opencodex_life.rs"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+blake3 = "1"
+base64 = "0.22"
+sha2 = "0.10"
+regex = "1"
+tokio = { workspace = true, features = ["sync", "time", "rt", "net", "fs", "process", "io-util", "macros"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+notify.workspace = true
+tracing-subscriber = { version = "0.3.22", features = ["fmt"] }
+
+octopus-appserver-proto = { path = "../octopus-appserver-proto" }
+octopus-protocol = { path = "../octopus-protocol" }
+octopus-util-string = { path = "../octopus-util-string" }
+octopus-util-image = { path = "../octopus-util-image" }
+octopus-util-abspath = { path = "../../../../worker_environment_kind/process_session/packages/octopus-util-abspath" }
+octopus-descriptors = { path = "../../../../../crates/octopus-descriptors" }
+octopus-interfaces = { path = "../../../../../crates/octopus-interfaces" }
+octopus-runtime = { path = "../../../../../crates/octopus-runtime" }
+octopus-run-record = { path = "../../../../../crates/octopus-run-record" }
+octopus-interface-transport = { path = "../../../../../crates/octopus-interface-transport" }
+octopus-world-pyecho-life-runtime = { path = "../../../world_pyecho/packages/octopus-world-pyecho-life-runtime" }
+octopus-interface-activation-app-server-transport = { path = "../../../world_operator_chat/packages/octopus-interface-activation-app-server-transport" }
+octopus-ledger = { path = "../../../../../crates/octopus-ledger" }
+octopus-ledger-index = { path = "../../../../../crates/octopus-ledger-index" }
+octopus-ledger-store = { path = "../../../../../crates/octopus-ledger-store" }
+octopus-model-context-render = { path = "../octopus-model-context-render" }
+octopus-run-authoring = { path = "../../../system_interface_authoring/packages/octopus-run-authoring" }
+octopus-operator-chat-client = { path = "../../../world_operator_chat/packages/octopus-operator-chat-client" }
+octopus-login = { path = "../octopus-codex-login" }
+octopus-secrets = { path = "../octopus-secrets" }
+octopus-tool-handlers = { path = "../../../../../crates/octopus-tool-handlers" }
+octopus-tool-registry = { path = "../../../../../crates/octopus-tool-registry" }
+futures = { version = "0.3", default-features = false }
+rustls = { version = "0.23", default-features = false, features = [
+    "aws_lc_rs",
+    "std",
+] }
+tokio-tungstenite = { version = "0.28.0", features = ["rustls-tls-native-roots"] }
+tracing = "0.1.44"
+url = "2"
+zeroize = "1.8.2"
+
+octopus-app-server-interface = { path = "../../../world_operator_chat/packages/octopus-app-server-interface" }
+
+[dev-dependencies]
+json-patch.workspace = true
+tokio = { workspace = true, features = ["test-util"] }
+octopus-app-server = { path = "../../../../../crates/octopus-app-server" }
+octopus-system-room-env = { path = "../../../../../registry/worker_environment_kind/system_room/packages/octopus-system-room-env" }
+toml = "0.9.5"
+tempfile = "3.23.0"

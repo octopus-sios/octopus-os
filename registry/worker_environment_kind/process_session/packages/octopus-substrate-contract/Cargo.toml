@@ -1,0 +1,34 @@
+[package]
+name = "octopus-substrate-contract"
+edition = "2024"
+rust-version = "1.85"
+version.workspace = true
+license.workspace = true
+
+[lib]
+name = "octopus_substrate_contract"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+octopus-util-abspath = { path = "../octopus-util-abspath" }
+octopus-util-pathuri = { path = "../octopus-util-pathuri" }
+
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+schemars = "0.8.22"
+strum_macros = "0.28.0"
+ts-rs = { version = "11", features = [
+    "uuid-impl",
+    "serde-json-impl",
+    "no-serde-warnings",
+] }
+chardetng = "0.1.17"
+encoding_rs = "0.8.35"
+globset = "0.4"
+wildmatch = "2.6.1"
+tracing = "0.1"
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+tempfile = "3.23.0"
