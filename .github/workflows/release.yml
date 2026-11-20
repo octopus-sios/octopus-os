@@ -74,8 +74,67 @@ jobs:
           compression-level: 0
           retention-days: 7
 
+  build-linux-cli:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      CARGO_INCREMENTAL: "0"
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node toolchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes build-essential pkg-config libssl-dev libsqlite3-dev libasound2-dev
+
+      - name: Compiler cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Release tag matches the app version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          expected="v$(node -p "require('./app/package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match app/package.json ($expected)" >&2
+            exit 1
+          fi
+
+      - name: Install client dependencies
+        run: npm ci --prefix app
+
+      - name: Build headless Linux CLI runtime
+        run: npm --prefix app run build:cli -- --target=x86_64-unknown-linux-gnu
+
+      - name: Package and verify Linux CLI release tarball
+        run: node app/scripts/release-linux.cjs --bundle=app/build/cli/runtime --output=app/build/release-linux
+
+      - name: Upload Linux CLI release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: octopus-linux-cli
+          path: app/build/release-linux/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
   publish:
-    needs: macos
+    needs: [macos, build-linux-cli]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -86,6 +145,37 @@ jobs:
         with:
           name: octopus-macos
           path: release-assets
+
+      - name: Download Linux CLI release assets
+        uses: actions/download-artifact@v4
+        with:
+          name: octopus-linux-cli
+          path: release-assets/linux
+
+      - name: Merge Linux CLI release assets and checksums
+        run: |
+          shopt -s nullglob
+          tarballs=(release-assets/linux/Octopus-*-linux-*.tar.gz)
+          if [ "${#tarballs[@]}" -eq 0 ]; then
+            echo "No Linux CLI release tarball found" >&2
+            exit 1
+          fi
+          for tarball in "${tarballs[@]}"; do
+            sha_file="${tarball}.sha256"
+            test -s "$sha_file"
+            (cd release-assets/linux && sha256sum -c "$(basename "$sha_file")")
+            cp "$tarball" "$sha_file" release-assets/release/
+          done
+          (
+            cd release-assets/release
+            {
+              cat checksums.txt
+              for file in Octopus-*-linux-*.tar.gz Octopus-*-linux-*.tar.gz.sha256; do
+                sha256sum "$file"
+              done
+            } | sort -k2,2 > checksums.txt.merged
+            mv checksums.txt.merged checksums.txt
+          )
 
       - name: Verify checksums
         working-directory: release-assets/release

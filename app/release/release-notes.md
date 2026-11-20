@@ -24,4 +24,19 @@ This build is ad-hoc signed and not notarized by Apple. Without that command mac
 - Command Line Tools for Xcode: `xcode-select --install`. Octopus runs `python3` and `git` from them.
 - A ChatGPT account for Sign in with ChatGPT. If Codex CLI is already signed in on this Mac, Octopus uses the same sign-in in `~/.codex`.
 
+## Linux headless CLI
+
+For Linux (`x86_64`), download `Octopus-{{version}}-linux-x64.tar.gz` and verify it against
+`Octopus-{{version}}-linux-x64.tar.gz.sha256` (or `checksums.txt`):
+
+```sh
+sha256sum -c Octopus-{{version}}-linux-x64.tar.gz.sha256
+tar -xzf Octopus-{{version}}-linux-x64.tar.gz
+```
+
+The archive includes the headless runtime, bundled registry packages, pinned Linux Codex CLI,
+and the systemd unit template at `packaging/linux/octopus-runtime.service`. See
+[Linux setup](https://github.com/octopus-sios/octopus-os/blob/v{{version}}/docs/linux.md) and
+[Terminal client](https://github.com/octopus-sios/octopus-os/blob/v{{version}}/docs/cli.md).
+
 Setup, Home location, and diagnostics: [Getting started](https://github.com/octopus-sios/octopus-os/blob/v{{version}}/docs/getting-started.md). Known problems: [Troubleshooting](https://github.com/octopus-sios/octopus-os/blob/v{{version}}/TROUBLESHOOTING.md).
