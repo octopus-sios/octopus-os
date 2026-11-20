@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-11-20: Linux Headless Self-Update, systemd Supervision &amp; 8/8 Green CI — Octopus OS</title>
+  <meta name="description" content="Engineering log entry 2026-11-20 for octopus-os: Linux /proc/self/exe restart fix, atomic CLI self-updates, hardened systemd unit, Linux CLI release packaging, and 8/8 quality CI green.">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark" aria-hidden="true">O</span>
+        <span>octopus-os</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../index.html#architecture">Architecture</a>
+        <a href="../index.html#tools">Standalone Tools</a>
+        <a href="../index.html#log">Engineering Log</a>
+        <a href="../index.html#stewardship">Stewardship &amp; Funding</a>
+        <a href="https://github.com/octopus-sios/octopus-os">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="hero">
+      <div class="breadcrumb"><a href="../index.html">Home</a> / Engineering Log / 2026-11-20</div>
+      <div class="eyebrow">Engineering Log · 2026-11-20 · main fb19cb4..7f65657</div>
+      <h1>Linux headless self-update, hardened systemd supervision, CLI release packaging, and 8/8 green CI.</h1>
+      <p class="lead">
+        First public engineering log entry documenting the Linux headless runtime, safe self-update
+        path, release archive packaging, and continuous integration verification on
+        <code>octopus-sios/octopus-os</code>.
+      </p>
+    </section>
+
+    <section>
+      <h2>What shipped on <code>main</code></h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Commit</th>
+            <th>Summary</th>
+            <th>Scope</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>fb19cb4</code></td>
+            <td>Linux headless self-update, hardened systemd unit, and restart executable path fix</td>
+            <td>7 files (+759 / -63)</td>
+          </tr>
+          <tr>
+            <td><code>42b4395</code></td>
+            <td>Linux CLI release packager, tests, and <code>build-linux-cli</code> release workflow job</td>
+            <td>5 files (+398 / -1)</td>
+          </tr>
+          <tr>
+            <td><code>7f65657</code></td>
+            <td>Contributor Covenant Code of Conduct and OS-neutral macOS/Linux issue templates</td>
+            <td>3 files (+133 / -2)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>1. Fixing the Linux <code>/proc/self/exe</code> restart trap</h3>
+      <p>
+        Previously, <code>crates/octopus-app/src/main.rs</code> resolved
+        <code>std::env::current_exe()</code> inside <code>start_again()</code> after shutting down
+        the daemon. On Linux, renaming the active bundle directory to <code>.prev</code> before
+        restarting causes <code>/proc/self/exe</code> to follow the moved inode, re-executing the old
+        binary instead of the upgraded installation.
+      </p>
+      <p>
+        <code>run_up()</code> now resolves and snapshots the restart executable path at startup via
+        <code>resolve_restart_executable()</code>, honoring an absolute
+        <code>OCTOPUS_RUNTIME_BIN</code> environment variable (failing closed on relative paths) and
+        falling back to the startup executable path. Three unit tests cover override, relative-path
+        rejection, and default fallback behavior.
+      </p>
+
+      <h3>2. Out-of-place CLI staging &amp; atomic Linux self-updates</h3>
+      <p>
+        <code>app/scripts/package-cli.cjs</code> and <code>app/scripts/build-cli.cjs</code> gained
+        <code>--output=&lt;dir&gt;</code> / <code>OCTOPUS_CLI_RUNTIME_DIR</code> staging so new
+        builds never mutate a running runtime directory in place, and
+        <code>runtime-build-receipt.json</code> now records git revision, modified-source state, and
+        build timestamp alongside binary SHA-256 digests.
+      </p>
+      <p>
+        <code>app/scripts/safe-self-update.cjs</code> now supports <code>--target=mac|cli|auto</code>
+        (defaulting to <code>cli</code> on Linux and <code>mac</code> on macOS), verifies receipt
+        SHA-256 hashes and <code>octopus doctor</code>, checks the movement ledger for active turns
+        without requiring desktop client directories, performs atomic directory or POSIX symlink
+        swaps, and falls back to <code>systemctl</code> restart/rollback when configured via
+        <code>--systemd-unit</code>.
+      </p>
+
+      <h3>3. Hardened systemd service &amp; Linux CLI release packaging</h3>
+      <p>
+        <code>packaging/linux/octopus-runtime.service</code> runs <code>octopus up</code> as an
+        unprivileged <code>octopus</code> user in the <code>octopus-process</code> group with
+        <code>Restart=on-failure</code>, <code>UMask=0077</code>, <code>NoNewPrivileges=yes</code>,
+        <code>ProtectSystem=full</code>, <code>ProtectKernelTunables=yes</code>,
+        <code>ProtectKernelModules=yes</code>, <code>ProtectControlGroups=yes</code>,
+        <code>LockPersonality=yes</code>, and <code>RestrictSUIDSGID=yes</code>.
+      </p>
+      <p>
+        <code>app/scripts/release-linux.cjs</code> validates the staged Linux CLI receipt, binary
+        digests, required registry files, and managed Codex payload, bundles the systemd unit
+        template, builds <code>Octopus-&lt;version&gt;-linux-&lt;arch&gt;.tar.gz</code>, extracts
+        the tarball into a temporary directory for byte-for-byte verification against the staged
+        tree, and writes the matching <code>.sha256</code> file.
+      </p>
+    </section>
+
+    <section>
+      <h2>Verification evidence</h2>
+      <p>
+        GitHub Actions <code>quality.yml</code> run
+        <a href="https://github.com/octopus-sios/octopus-os/actions/runs/44705235038"><code>#44705235038</code></a>
+        on <code>7f65657</code> passed <strong>8/8 jobs</strong>:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Job</th>
+            <th>Status</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>provider-bridge</code></td><td>PASS</td><td>OpenCodex bridge build &amp; test</td></tr>
+          <tr><td><code>dependency-audit</code></td><td>PASS</td><td>0 high/critical npm or Cargo advisories</td></tr>
+          <tr><td><code>client</code></td><td>PASS</td><td>TypeScript, client/self-update/release-linux tests, public-source boundary</td></tr>
+          <tr><td><code>workspace-check</code></td><td>PASS</td><td><code>cargo check --workspace --all-targets</code> on Linux</td></tr>
+          <tr><td><code>rust</code></td><td>PASS</td><td>Policy, ledger, runtime, transport, and <code>mcp-identity-guard</code> tests</td></tr>
+          <tr><td><code>native-client</code></td><td>PASS</td><td>macOS native filesystem, topology planner, and CLI tests</td></tr>
+          <tr><td><code>tool-continuations</code></td><td>PASS</td><td>Process-session and Code Mode continuation contracts</td></tr>
+          <tr><td><code>native-contracts</code></td><td>PASS</td><td>Verifier, Home admission, provider recovery, and voice contracts</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Remaining known gaps</h3>
+      <ul class="log-list">
+        <li>
+          <strong>Linux headless ALSA header requirement:</strong> building the Linux workspace
+          still requires <code>libasound2-dev</code> because audio capture compiles unconditionally;
+          making it optional for headless builds is queued as a clean follow-up.
+        </li>
+        <li>
+          <strong>Pre-release dry-run:</strong> validating <code>.github/workflows/release.yml</code>
+          end-to-end via <code>workflow_dispatch</code> before cutting the <code>v0.1.0</code> tag.
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <div class="footer-links">
+      <a href="../index.html">Back to overview</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/ORIGIN.md">Origin</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/FUNDING.md">Funding</a>
+    </div>
+    <p>Published transparently from <code>octopus-sios/octopus-os</code>. Static HTML &amp; CSS only.</p>
+  </footer>
+</body>
+</html>

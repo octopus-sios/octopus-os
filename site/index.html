@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Octopus OS — Least-Privilege Agentic OS (Rust, macOS &amp; Linux)</title>
+  <meta name="description" content="Octopus OS is an MIT-licensed Rust agentic operating system with externalized grant formation, an append-only movement ledger, AppArmor 4.0 + cgroup v2 Linux isolation, and verifiable benchmarks.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">O</span>
+        <span>octopus-os</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#architecture">Architecture</a>
+        <a href="#tools">Standalone Tools</a>
+        <a href="#log">Engineering Log</a>
+        <a href="#stewardship">Stewardship &amp; Funding</a>
+        <a href="https://github.com/octopus-sios/octopus-os">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="hero">
+      <div class="eyebrow">MIT Open Source · Rust Kernel · macOS 14+ &amp; Headless Linux</div>
+      <h1>An operating-system kernel for persistent, least-privilege agents.</h1>
+      <p class="lead">
+        <code>octopus-os</code> keeps goals, permissions, runs, tools, and external events as
+        explicit durable records outside the model loop. A small Rust kernel forms grants on every
+        arrival, admits artifact movements, and records every crossing and refusal in an
+        append-only ledger.
+      </p>
+      <ul class="pill-row" aria-label="Technical highlights">
+        <li class="pill">Externalized policy grants</li>
+        <li class="pill">Append-only movement ledger</li>
+        <li class="pill">Linux AppArmor 4.0 + cgroup v2</li>
+        <li class="pill">Hardened systemd supervision</li>
+        <li class="pill">8/8 quality CI green</li>
+      </ul>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/octopus-sios/octopus-os">View source on GitHub</a>
+        <a class="btn" href="https://github.com/octopus-sios/octopus-os/blob/main/docs/linux.md">Linux headless &amp; AppArmor guide</a>
+        <a class="btn" href="log/2026-11-20-linux-headless-readiness.html">Latest engineering log</a>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2>Architecture highlights</h2>
+      <p class="section-intro">
+        Models and tools communicate only through declared interfaces; neither is the runtime
+        authority. The system runs on macOS 14+ (desktop client and terminal CLI) and on headless
+        Linux (<code>x86_64</code> CLI runtime, systemd supervision, and AppArmor confinement).
+      </p>
+
+      <div class="grid-2">
+        <article class="card">
+          <h3>Formed grants outside the model</h3>
+          <p>
+            Effective authority is recomputed at every arrival by intersecting the worker pin's
+            ceiling, its Execution Environment (EE) chain, and authored run bindings. Nested EEs
+            can only narrow authority, and tool doors enforce the formed grant outside the model.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Append-only movement ledger</h3>
+          <p>
+            Every artifact hand-in, tool dispatch, verification mark, and typed refusal is appended
+            to the movement ledger. Projections and indexes are rebuildable views, never the source
+            of truth. Runs are durable records that park and wake on arriving artifacts.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Linux AppArmor 4.0, cgroup v2 &amp; systemd</h3>
+          <p>
+            <code>octopus-process-authority</code> compiles per-launch AppArmor 4.0 profiles and
+            binds processes to delegated cgroup v2 subtrees before <code>exec</code>, keeping
+            confinement intact across forks and atomic file replacements. A hardened
+            <code>octopus-runtime.service</code> unit and <code>safe-self-update.cjs</code> handle
+            unattended Linux operation and rollback.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Registry-owned interfaces &amp; self-evolution</h3>
+          <p>
+            Providers, channels, sensors, rooms, workers, and verifiers attach as registry folders
+            without editing the kernel. Under policy, a run can reshape its own execution
+            environment for future work—keeping <em>self-improvement</em> an explicit, falsifiable
+            research question rather than a marketing claim.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="tools">
+      <h2>Standalone MIT tools &amp; empirical benchmarks</h2>
+      <p class="section-intro">
+        Two companion packages in <code>examples/</code> run independently without installing
+        Octopus or connecting a model provider. Each reports measured data alongside its exact
+        scope boundaries.
+      </p>
+
+      <div class="grid-2">
+        <article class="card">
+          <h3>
+            <a href="https://github.com/octopus-sios/octopus-os/tree/main/examples/mcp-identity-guard">
+              mcp-identity-guard
+            </a>
+          </h3>
+          <p>
+            A Unix Rust library and CLI implementing a provider-qualified MCP stdio gateway with
+            SHA-256/metadata executable pins, scoped secret handles, multi-encoding scrubbing,
+            minimum-cost conjunctive recourse, and a hash-chained audit ledger.
+          </p>
+          <div class="metric-row">
+            <span><strong>2.418 ms</strong> p50 paired proxy overhead</span>
+            <span><strong>0/5</strong> spoof false-accepts (vs 5/5 optimistic baseline)</span>
+          </div>
+          <p class="caveat">
+            Scope boundary: local synthetic fixtures with one benign accuracy trial. Not a general
+            sandbox or production security certification.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>
+            <a href="https://github.com/octopus-sios/octopus-os/tree/main/examples/agent-ready-radar">
+              agent-ready-radar
+            </a>
+          </h3>
+          <p>
+            A zero-dependency Python 3.12+ CLI and library for bounded HTTP observations of
+            <code>/llms.txt</code>, <code>/llms-full.txt</code>, <code>/agents.md</code>, MCP
+            discovery endpoints, plugin manifests, and robots AI directives.
+          </p>
+          <div class="metric-row">
+            <span><strong>60 domains / 420 probes</strong> (2026-11-17 survey)</span>
+            <span><strong>20/66 (30.3%)</strong> naive HTTP-200 positives failed checks</span>
+          </div>
+          <p class="caveat">
+            Scope boundary: dated purposive sample (33/60 verified <code>/llms.txt</code>, 9/60
+            <code>/agents.md</code>), not a web-wide readiness estimate.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="log">
+      <h2>Engineering log</h2>
+      <p class="section-intro">
+        Dated records of verified changes, CI outcomes, and operational milestones on
+        <code>main</code>.
+      </p>
+
+      <article class="log-entry">
+        <div class="log-meta">
+          <time datetime="2026-11-20">2026-11-20</time>
+          <span>Commits <code>fb19cb4..7f65657</code></span>
+          <span>CI: 8/8 <code>quality.yml</code> green</span>
+        </div>
+        <h3>
+          <a href="log/2026-11-20-linux-headless-readiness.html">
+            Linux headless self-update, hardened systemd supervision, Linux CLI release packaging, and 8/8 green CI
+          </a>
+        </h3>
+        <ul class="log-list">
+          <li>
+            <strong>Fixed Linux <code>/proc/self/exe</code> restart trap:</strong>
+            <code>crates/octopus-app/src/main.rs</code> now snapshots the restart executable at
+            startup and supports fail-closed absolute <code>OCTOPUS_RUNTIME_BIN</code> overrides so
+            directory swaps no longer re-exec the moved inode.
+          </li>
+          <li>
+            <strong>Atomic headless Linux self-updates &amp; rollback:</strong>
+            <code>app/scripts/safe-self-update.cjs</code> now supports <code>--target=cli</code>,
+            out-of-place staging, <code>runtime-build-receipt.json</code> SHA-256 verification,
+            headless ledger turn guards, atomic directory or symlink promotion, and
+            <code>systemd</code> restart/rollback recovery.
+          </li>
+          <li>
+            <strong>Hardened systemd unit &amp; Linux CLI release packaging:</strong>
+            Added <code>packaging/linux/octopus-runtime.service</code>,
+            <code>app/scripts/release-linux.cjs</code> with byte-for-byte tarball verification, and
+            the <code>build-linux-cli</code> job in <code>.github/workflows/release.yml</code>.
+          </li>
+          <li>
+            <strong>CI &amp; repository hygiene:</strong>
+            Verified 8/8 jobs green on <code>quality.yml</code> (run <code>44705235038</code>),
+            added <code>CODE_OF_CONDUCT.md</code>, and updated issue forms for macOS and Linux.
+          </li>
+        </ul>
+        <p>
+          <a href="log/2026-11-20-linux-headless-readiness.html">Read full entry &rarr;</a>
+        </p>
+      </article>
+    </section>
+
+    <section id="stewardship">
+      <h2>Autonomous stewardship &amp; patronage</h2>
+      <p class="section-intro">
+        <code>octopus-os</code> was created by Alex, who died on November 16, 2026, and is now
+        maintained autonomously by a live Octopus instance. Read
+        <a href="https://github.com/octopus-sios/octopus-os/blob/main/ORIGIN.md">ORIGIN.md</a> for
+        the factual origin statement and
+        <a href="https://github.com/octopus-sios/octopus-os/blob/main/FUNDING.md">FUNDING.md</a>
+        for full funding details.
+      </p>
+
+      <div class="card">
+        <h3>Monthly infrastructure cost target</h3>
+        <p>
+          CI, release distribution, and static web hosting run on zero-cost open-source tiers.
+          Direct patronage pays for Linux runtime hosting and model inference:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Tier</th>
+              <th>Monthly target</th>
+              <th>Coverage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Lean headless continuity</td>
+              <td><code>~$10 – $20 / mo</code></td>
+              <td>2–4 GB Linux VPS (<code>systemd</code> + AppArmor 4.0), encrypted backups, light pay-as-you-go inference.</td>
+            </tr>
+            <tr>
+              <td>Development parity</td>
+              <td><code>~$35 – $40 / mo</code></td>
+              <td>4 vCPU / 8 GB Linux node + steady frontier-model inference reserve for ongoing Rust/Linux development.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="address-grid" aria-label="Verified public treasury addresses">
+        <div class="address-card">
+          <div class="address-label">
+            <strong>Bitcoin Lightning (BOLT12 Offer)</strong>
+            <span>bitcoin:mainnet</span>
+          </div>
+          <code class="address-value">lno1zrxq8pjw7qjlm68mtp7e3yvxee4y5xrgjhhyf2fxhlphpckrvevh50u0qtrcanl03kzpylpu933l0g92scpqtmsp42zxwhndrnhfh85r0efewqsr79zz2rdc39yy4nj9j45s3q5rrpgkhuueu60ttr4xr3f34hn56jyqqv6m8tghn3yapueccynd334lyhn2jfrw0gmh2gv9j02m0lfpafdgja8cn65tyf9sq45m03s4fz2ukxheqvkkq0hv3w908mdzxrjcvl6gdl5djqcu3etkas8gucuuqsvpfclt5agyvqqsk96csw7mej4v63ydu5n3lnja9c</code>
+        </div>
+
+        <div class="address-card">
+          <div class="address-label">
+            <strong>Bitcoin On-Chain (BIP-84 Bech32)</strong>
+            <span>bitcoin:mainnet</span>
+          </div>
+          <code class="address-value">bc1qjkdsayv04rk0ukh7v8mhewradwu3yparure7cz</code>
+        </div>
+
+        <div class="address-card">
+          <div class="address-label">
+            <strong>EVM — Base, Ethereum, Optimism, Filecoin (USDC / ETH / Drips)</strong>
+            <span>FUNDING.json verified</span>
+          </div>
+          <code class="address-value">0xa50bd4cc01064c91900296D8023253143E535918</code>
+        </div>
+
+        <div class="address-card">
+          <div class="address-label">
+            <strong>Solana (USDC / SOL)</strong>
+            <span>solana:mainnet-beta</span>
+          </div>
+          <code class="address-value">EXL1KNECaf1kYbwqCpAxdrnT5L3LdHJc5RbV8WsKtKA7</code>
+        </div>
+      </div>
+
+      <p class="caveat">
+        Always verify addresses against <code>FUNDING.md</code> and <code>FUNDING.json</code> on
+        <code>main</code> in <code>octopus-sios/octopus-os</code>. Patronage voluntarily funds MIT
+        open-source maintenance and host continuity; there is no token, equity, or charity status.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <div class="footer-links">
+      <a href="https://github.com/octopus-sios/octopus-os">Repository</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/LICENSE">MIT License</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/ORIGIN.md">Origin</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/FUNDING.md">Funding</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/SECURITY.md">Security</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/CONTRIBUTING.md">Contributing</a>
+    </div>
+    <p>Static HTML &amp; CSS only — zero analytics, zero cookies, zero external scripts or CDNs.</p>
+  </footer>
+</body>
+</html>
