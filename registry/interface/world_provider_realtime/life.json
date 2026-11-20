@@ -19,7 +19,8 @@
           "run_records_root"
         ],
         "write_root_slots": [
-          "interface_hand_in_root"
+          "interface_hand_in_root",
+          "app_server_control_root"
         ],
         "executable_root_slots": [],
         "read_paths": [],

@@ -435,7 +435,7 @@ impl LinuxProcessPolicy {
             }
         }
         let mut profile = format!(
-            "abi <abi/4.0>,\nprofile {name} flags=(mediate_deleted) {{\n  signal (receive),\n  signal (send) peer={name},\n  ptrace (read, trace) peer={name},\n  ptrace (readby, tracedby),\n"
+            "abi <abi/4.0>,\nprofile {name} flags=(attach_disconnected, mediate_deleted) {{\n  signal (receive),\n  signal (send) peer={name},\n  signal (send) peer={name}//&unconfined,\n  ptrace (read, trace) peer={name},\n  ptrace (read, trace) peer={name}//&unconfined,\n  ptrace (readby, tracedby),\n"
         );
         profile.push_str("  owner /proc/[0-9]*/{auxv,cmdline,environ,exe,fd/,fdinfo/,fdinfo/*,limits,maps,mountinfo,mounts,cgroup,stat,statm,status,task/,task/[0-9]*/{stat,status}} r,\n  /proc/{cpuinfo,meminfo,version,sys/kernel/hostname,sys/kernel/osrelease} r,\n  /sys/devices/system/cpu/{online,possible,present} r,\n");
         for line in lines {
@@ -700,6 +700,19 @@ mod tests {
         assert!(local.contains("  network unix,\n  unix,\n") && !local.contains(ANONYMOUS_STREAM_SOCKETS), "{local}");
         let network = profile(true, false, false);
         assert!(network.contains("  network,\n  unix,\n") && !network.contains(ANONYMOUS_STREAM_SOCKETS), "{network}");
+    }
+
+    #[test]
+    fn stacked_unconfined_peers_are_allowed_for_self_signals_and_ptrace() {
+        let name = format!("octopus-1000-{}", "0".repeat(64));
+        let text = profile(false, false, false);
+        assert!(
+            text.contains(&format!("profile {name} flags=(attach_disconnected, mediate_deleted) {{")),
+            "{text}"
+        );
+        assert!(text.contains(&format!("  signal (send) peer={name},\n")), "{text}");
+        assert!(text.contains(&format!("  signal (send) peer={name}//&unconfined,\n")), "{text}");
+        assert!(text.contains(&format!("  ptrace (read, trace) peer={name}//&unconfined,\n")), "{text}");
     }
 
     #[test]
