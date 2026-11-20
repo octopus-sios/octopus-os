@@ -34,8 +34,11 @@ sha256sum -c Octopus-{{version}}-linux-x64.tar.gz.sha256
 tar -xzf Octopus-{{version}}-linux-x64.tar.gz
 ```
 
-The archive includes the headless runtime, bundled registry packages, pinned Linux Codex CLI,
-and the systemd unit template at `packaging/linux/octopus-runtime.service`. See
+The archive includes the headless runtime (`bin/octopus`: `up`, `down`, `restart`, `doctor`,
+`project-ee-policies`), the Linux AppArmor process-authority binary
+(`bin/octopus-linux-process-authority`), bundled registry packages, pinned Linux Codex CLI,
+and systemd/installer templates under `packaging/linux/` (`octopus-runtime.service`,
+`octopus-process-authority.service`, `install-linux.sh`). See
 [Linux setup](https://github.com/octopus-sios/octopus-os/blob/v{{version}}/docs/linux.md) and
 [Terminal client](https://github.com/octopus-sios/octopus-os/blob/v{{version}}/docs/cli.md).
 

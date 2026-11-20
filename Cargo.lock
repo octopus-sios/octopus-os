@@ -4578,7 +4578,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-app"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fs2",
  "notify",
@@ -4611,7 +4611,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-app-server"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-ee",
@@ -4639,7 +4639,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-app-server-interface"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-stream",
  "octopus-descriptors",
@@ -4657,7 +4657,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-applypatch"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "assert_matches",
@@ -4675,7 +4675,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-appserver-proto"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -4702,7 +4702,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-async-utils"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pretty_assertions",
  "tokio",
@@ -4711,7 +4711,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-audio-device-session-env"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cpal",
  "fs2",
@@ -4730,7 +4730,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-audio-device-session-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-process-session-tool-runtime",
@@ -4739,7 +4739,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-browser-session-env"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -4767,7 +4767,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-browser-session-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-browser-session-env",
  "octopus-descriptors",
@@ -4777,7 +4777,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-client"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "eventsource-stream",
@@ -4804,7 +4804,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-code-mode-engine"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "deno_core_icudata",
  "pretty_assertions",
@@ -4818,7 +4818,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-code-mode-room"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -4861,7 +4861,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-code-mode-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-code-mode-room",
  "octopus-descriptors",
@@ -4879,7 +4879,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-container-room"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -4897,7 +4897,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-container-session-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-process-session-tool-runtime",
@@ -4906,7 +4906,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-context-collections"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "libc",
  "octopus-descriptors",
@@ -4920,7 +4920,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-context-projection"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-interface-transport",
@@ -4937,7 +4937,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-descriptors"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "schemars 0.8.22",
@@ -4948,7 +4948,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-desktop-session-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-process-session-tool-runtime",
@@ -4958,7 +4958,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-ee"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-policy",
@@ -4969,7 +4969,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-exec-substrate"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -5008,7 +5008,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-execpolicy"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -5034,7 +5034,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-file-search"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "crossbeam-channel",
@@ -5047,7 +5047,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-file-storage"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "fs2",
@@ -5061,7 +5061,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-file-system"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "futures",
@@ -5080,7 +5080,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-file-write-contract"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -5092,7 +5092,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-git-sandbox-substrate"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "libc",
@@ -5108,7 +5108,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-git-worktree-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-process-session-tool-runtime",
@@ -5118,7 +5118,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-image-generation-interface"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -5135,7 +5135,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-interface-activation-app-server-transport"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "futures",
  "json-patch",
@@ -5165,7 +5165,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-interface-activation-stdin-json-lines"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-interface-transport",
@@ -5179,7 +5179,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-interface-projection"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-interfaces",
@@ -5194,7 +5194,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-interface-transport"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "fs2",
@@ -5223,7 +5223,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-interfaces"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "blake3",
@@ -5242,7 +5242,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-ledger"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "octopus-descriptors",
@@ -5256,7 +5256,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-ledger-index"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-interfaces",
@@ -5270,7 +5270,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-ledger-store"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "octopus-descriptors",
@@ -5284,7 +5284,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-linux-process-authority"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "libc",
  "octopus-verifiers",
@@ -5294,7 +5294,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-login"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "chrono",
@@ -5311,7 +5311,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-marks"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-ledger",
@@ -5323,7 +5323,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-mcp-client"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "jsonschema",
@@ -5344,7 +5344,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-mcp-stdio-room"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "futures-util",
@@ -5365,7 +5365,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-mcp-stdio-session-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-process-session-tool-runtime",
@@ -5374,7 +5374,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-model-context-render"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-interfaces",
@@ -5386,7 +5386,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-network-proxy"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -5419,7 +5419,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-operator-chat-client"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "futures",
@@ -5462,7 +5462,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-policy"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "octopus-descriptors",
@@ -5474,7 +5474,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-process-session-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "libc",
@@ -5499,7 +5499,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-protocol"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "chardetng",
@@ -5540,7 +5540,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-provider-codex"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -5590,7 +5590,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-realtime-signaling"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "futures-util",
@@ -5622,7 +5622,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-realtime-webrtc"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "libwebrtc",
  "thiserror 1.0.69",
@@ -5631,7 +5631,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-remote-exec-room"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -5655,7 +5655,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-remote-exec-server-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-process-session-tool-runtime",
@@ -5664,7 +5664,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-run-authoring"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "futures",
@@ -5695,7 +5695,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-run-record"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-file-storage",
@@ -5708,7 +5708,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "async-trait",
  "octopus-descriptors",
@@ -5729,7 +5729,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-sandbox-substrate"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "dirs",
@@ -5754,7 +5754,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-schemas"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-interfaces",
  "octopus-ledger",
@@ -5767,7 +5767,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-secrets"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "age",
  "anyhow",
@@ -5786,7 +5786,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-shell-command"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -5804,7 +5804,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-substrate-contract"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chardetng",
  "encoding_rs",
@@ -5824,7 +5824,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-system-coder-env"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-git-sandbox-substrate",
@@ -5841,7 +5841,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-system-exec-env"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -5863,7 +5863,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-system-gui-env"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -5889,7 +5889,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-system-room-env"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fs2",
  "json-patch",
@@ -5914,7 +5914,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-system-room-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-interfaces",
@@ -5928,7 +5928,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-system-workspace-env"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -5957,7 +5957,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-tool-handlers"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-ledger",
@@ -5970,7 +5970,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-tool-registry"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "jsonschema",
@@ -5982,7 +5982,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-util-abspath"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dirs",
  "dunce",
@@ -5996,7 +5996,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-util-image"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "divan",
@@ -6010,7 +6010,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-util-pathuri"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "octopus-util-abspath",
@@ -6026,7 +6026,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-util-pty"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "filedescriptor",
@@ -6042,7 +6042,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-util-string"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "pretty_assertions",
  "regex-lite",
@@ -6052,7 +6052,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-verifiers"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "libc",
  "object",
@@ -6068,7 +6068,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-web-search-env"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "octopus-browser-session-env",
@@ -6089,7 +6089,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-web-search-tool-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-descriptors",
  "octopus-process-session-tool-runtime",
@@ -6098,7 +6098,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-worker-env"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "octopus-descriptors",
@@ -6112,7 +6112,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-worker-env-floor"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-substrate-contract",
  "octopus-util-abspath",
@@ -6122,7 +6122,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-workspace-substrate"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "base64 0.22.1",
  "blake3",
@@ -6145,7 +6145,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-world-cron-interface"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-app-server",
  "octopus-descriptors",
@@ -6163,7 +6163,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-world-pyecho-interface"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "octopus-app-server",
  "octopus-descriptors",
@@ -6181,7 +6181,7 @@ dependencies = [
 
 [[package]]
 name = "octopus-world-pyecho-life-runtime"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "blake3",
  "libc",
