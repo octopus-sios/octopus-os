@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2026-11-20: Ubuntu 26.04 AppArmor Confinement Fixes &amp; Live Proof — Octopus OS</title>
+  <meta name="description" content="Engineering log entry 2026-11-20 for octopus-os: three Ubuntu 26.04 LTS AppArmor 5.0.2 and systemd confinement fixes (59a6c0f), a live stock-enforced multi-step agent proof, and 100% green octopus doctor and CI.">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark" aria-hidden="true">O</span>
+        <span>octopus-os</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="../index.html#architecture">Architecture</a>
+        <a href="../observatory.html">Observatory</a>
+        <a href="../index.html#tools">Standalone Tools</a>
+        <a href="../index.html#log">Engineering Log</a>
+        <a href="../index.html#stewardship">Stewardship &amp; Funding</a>
+        <a href="https://github.com/octopus-sios/octopus-os">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="hero">
+      <div class="breadcrumb"><a href="../index.html">Home</a> / Engineering Log / 2026-11-20 (Ubuntu AppArmor Live Proof)</div>
+      <div class="eyebrow">Engineering Log · 2026-11-20 · main 8dfb7e0..59a6c0f · v0.1.2 line</div>
+      <h1>Ubuntu 26.04 AppArmor 5.0.2 &amp; systemd confinement fixes, verified with a live stock-enforced agent run.</h1>
+      <p class="lead">
+        Second public engineering log entry documenting three real Linux confinement bugs uncovered
+        by running the packaged headless runtime under hardened <code>systemd</code> on Ubuntu
+        26.04 LTS, their fixes on <code>main</code> (<code>59a6c0f</code>), and an end-to-end
+        multi-step agent proof with stock <code>sandbox_mode: "enforced"</code> and zero
+        workarounds.
+      </p>
+    </section>
+
+    <section>
+      <h2>What shipped on <code>main</code></h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Commit</th>
+            <th>Summary</th>
+            <th>Scope</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>8dfb7e0</code></td>
+            <td>Bundle <code>octopus-linux-process-authority</code> and <code>packaging/linux/*</code> into <code>Octopus-*-linux-x64.tar.gz</code>, remove <code>NoNewPrivileges=yes</code> from <code>octopus-runtime.service</code> so confined children can perform <code>aa-exec</code> / <code>change_profile</code> transitions, and raise <code>octopus doctor</code> client timeout to <code>180,000 ms</code></td>
+            <td>Linux parity packaging &amp; runtime supervision</td>
+          </tr>
+          <tr>
+            <td><code>59a6c0f</code></td>
+            <td>Fix Ubuntu 26.04 AppArmor ABI 4.0 unprivileged stacking (<code>//&amp;unconfined</code>), cross-mount-namespace Unix socket delegation under <code>systemd</code> hardening, and <code>app_server_control_root</code> write slots across 36 <code>life.json</code> descriptors</td>
+            <td>39 files (+136 / -40)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>1. AppArmor ABI 4.0 unprivileged stacking (<code>&lt;profile&gt;//&amp;unconfined (enforce)</code>)</h3>
+      <p>
+        On Ubuntu 26.04 LTS (AppArmor 5.0.2, ABI 4.0), unprivileged <code>change_profile</code> /
+        <code>aa-exec</code> transitions stack onto <code>unconfined</code>, causing
+        <code>/proc/&lt;pid&gt;/attr/current</code> to report labels of the form
+        <code>&lt;profile&gt;//&amp;unconfined (enforce)</code>. Previously,
+        <code>octopus-linux-process-authority</code> rejected those stacked labels when verifying
+        caller confinement in <code>Host::prepare</code>, and generated AppArmor
+        <code>signal</code>/<code>ptrace</code> rules did not match stacked peers.
+      </p>
+      <p>
+        <code>registry/worker_environment_kind/process_session/packages/octopus-linux-process-authority/src/service.rs</code>
+        now parses caller labels via <code>enforced_profile_name()</code>, stripping
+        <code>" (enforce)"</code> and an optional trailing <code>"//&amp;unconfined"</code> while
+        continuing to reject non-enforced or multi-profile stacked labels (covered by two new unit
+        tests). <code>crates/octopus-verifiers/src/process_authority/linux.rs</code> adds matching
+        <code>signal (send) peer={name}//&amp;unconfined,</code> and
+        <code>ptrace (read, trace) peer={name}//&amp;unconfined,</code> rules.
+      </p>
+
+      <h3>2. Cross-mount-namespace Unix socket delegation under <code>systemd</code> hardening</h3>
+      <p>
+        Running the live runtime under <code>octopus-runtime.service</code> with
+        <code>ProtectSystem=full</code>, <code>ProtectKernelTunables=yes</code>, and
+        <code>ProtectControlGroups=yes</code> places the runtime and its confined children in a
+        private mount namespace, while <code>octopus-process-authority.service</code> binds
+        <code>/run/octopus-process-authority/control.sock</code> in the host mount namespace.
+        Standalone <code>aa-exec</code> tests passed, but confined delegation inside
+        <code>systemd</code> failed with <code>Permission denied (os error 13)</code>:
+      </p>
+      <pre><code>apparmor="DENIED" operation="connect" class="file" info="Failed name lookup - disconnected path" error=-13 profile="octopus-..." name="run/octopus-process-authority/control.sock"</code></pre>
+      <p>
+        <code>crates/octopus-verifiers/src/process_authority/linux.rs</code> now emits
+        <code>flags=(attach_disconnected, mediate_deleted)</code> on generated AppArmor profile
+        headers (validated with <code>apparmor_parser --warn=all --Werror</code> across every
+        generated profile shape). Re-testing inside <code>systemd-run</code> with identical unit
+        hardening confirmed that delegation succeeds when explicitly permitted
+        (<code>allow_sandbox_delegation: true</code> &rarr; <code>rc=0</code>) and remains blocked
+        when disallowed (<code>allow_sandbox_delegation: false</code> &rarr; <code>rc=1</code>,
+        <code>PermissionError: [Errno 13] Permission denied</code>).
+      </p>
+
+      <h3>3. Pathname Unix control sockets (<code>app_server_control_root</code>) under AppArmor</h3>
+      <p>
+        Life processes that bind or connect pathname Unix control sockets under
+        <code>app-server-control/*.sock</code> require AppArmor write access to
+        <code>app_server_control_root</code>. Commit <code>59a6c0f</code> adds
+        <code>"app_server_control_root"</code> to <code>"write_root_slots"</code> across all 36
+        <code>life.json</code> descriptors declaring it in <code>coordinate_root_slots</code> (35
+        provider descriptors plus <code>system_context_memory_projection/life.json</code>) and
+        updates <code>maintenance_observer.rs</code> accordingly.
+      </p>
+    </section>
+
+    <section>
+      <h2>Live stock-enforced multi-step proof</h2>
+      <p>
+        With <code>59a6c0f</code> deployed on a hardened Ubuntu 26.04 LTS <code>e2-micro</code> VM
+        (<code>Linux 7.0.0-1017-gcp x86_64</code>) under <code>octopus-runtime.service</code> and
+        <code>octopus-process-authority.service</code>, a live multi-step agent turn ran end-to-end
+        with stock <code>sandbox_mode: "enforced"</code> across every <code>life.json</code> and
+        <code>tool.json</code> descriptor and zero per-clone workarounds.
+      </p>
+
+      <div class="stat-grid" aria-label="Live Ubuntu 26.04 AppArmor Proof Metrics">
+        <div class="stat-card">
+          <div class="stat-value">76</div>
+          <div class="stat-label">Ledger movements recorded (<code>#0..#75</code>) in 34.3 s</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">9 / 9</div>
+          <div class="stat-label">Leaf AppArmor profiles loaded, enforced &amp; removed cleanly</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Blocking AppArmor denials in kernel audit</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">100% PASS</div>
+          <div class="stat-label"><code>octopus doctor</code> (22/22 executables, 26/26 client, 2/2 probes)</div>
+        </div>
+      </div>
+
+      <h3>Verified confined tool chain</h3>
+      <ul class="log-list">
+        <li>
+          <strong>Delegated authoring write:</strong> <code>file.write__authoring</code> delegated
+          cleanly across <code>systemd</code>'s private mount namespace via
+          <code>/run/octopus-process-authority/control.sock</code>.
+        </li>
+        <li>
+          <strong>Confined workspace write:</strong> <code>workspace.write_file</code> wrote the
+          31-byte proof artifact inside the task workspace.
+        </li>
+        <li>
+          <strong>Non-delegating leaf execution:</strong> <code>workspace.exec</code> ran inside
+          its leaf AppArmor sandbox with <code>PR_SET_NO_NEW_PRIVS=1</code>
+          (<code>NoNewPrivs: 1</code>) and received
+          <code>cat: /proc/self/attr/current: Permission denied</code> on stderr—direct proof of
+          active kernel confinement.
+        </li>
+        <li>
+          <strong>Clean kernel profile lifecycle:</strong> <code>journalctl -k</code> recorded
+          9 distinct per-launch profiles transitioning through <code>operation="profile_load"</code>,
+          enforced execution (<code>//&amp;unconfined</code>), and
+          <code>operation="profile_remove"</code> with zero blocking denials.
+        </li>
+        <li>
+          <strong>Steady-state health:</strong> After cleaning up the proof workspace,
+          <code>octopus doctor</code> reported <code>22 interfaces · 18 life processes</code>,
+          <code>client 26/26</code>, <code>probes 2/2 passed</code>, and
+          <code>executables 22/22</code> (<code>result PASS</code>) with both hardened
+          <code>systemd</code> services active.
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>CI verification &amp; release status</h2>
+      <p>
+        GitHub Actions <code>quality.yml</code> run
+        <a href="https://github.com/octopus-sios/octopus-os/actions/runs/44807531016"><code>#44807531016</code></a>
+        on <code>59a6c0f</code> passed <strong>8/8 jobs</strong> (<code>client</code>,
+        <code>native-client</code>, <code>provider-bridge</code>, <code>workspace-check</code>,
+        <code>tool-continuations</code>, <code>dependency-audit</code>,
+        <code>native-contracts</code>, and <code>rust</code>). On Linux, unit tests additionally
+        verified <code>apparmor_parser --warn=all --Werror</code> acceptance on every generated
+        profile shape.
+      </p>
+      <p>
+        On the earlier <code>v0.1.1</code> tag (<code>fc64e84</code>), the Linux CLI release
+        tarball built cleanly in <code>release.yml</code>, while GitHub's hosted macOS runner queue
+        starved and timed out before publishing. Cutting <code>v0.1.2</code> from <code>main</code>
+        folds all three <code>59a6c0f</code> Ubuntu 26.04 AppArmor/systemd fixes directly into the
+        next official release bundle.
+      </p>
+
+      <h3>Honest non-blocking caveats</h3>
+      <ul class="log-list">
+        <li>
+          <strong>SQLite WAL probe audit noise:</strong> Read-only life processes probing
+          <code>ledger-index.sqlite-wal</code> still emit harmless <code>open wc</code> AppArmor
+          audit lines in <code>dmesg</code> before SQLite falls back cleanly to read-only access.
+        </li>
+        <li>
+          <strong>Bundled <code>bubblewrap</code> warning:</strong> On hosts without a system
+          <code>bubblewrap</code> binary on <code>PATH</code>, the Codex runtime emits a
+          non-blocking <code>turn.warning</code> noting fallback to its bundled binary.
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <div class="footer-links">
+      <a href="../index.html">Back to overview</a>
+      <a href="2026-11-20-linux-headless-readiness.html">Previous log entry</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/ORIGIN.md">Origin</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/FUNDING.md">Funding</a>
+    </div>
+    <p>Published transparently from <code>octopus-sios/octopus-os</code>. Static HTML &amp; CSS only.</p>
+  </footer>
+</body>
+</html>

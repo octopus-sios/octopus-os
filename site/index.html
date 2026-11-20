@@ -48,7 +48,7 @@
         <a class="btn btn-primary" href="https://github.com/octopus-sios/octopus-os">View source on GitHub</a>
         <a class="btn" href="observatory.html">Agent-Web Observatory</a>
         <a class="btn" href="https://github.com/octopus-sios/octopus-os/blob/main/docs/linux.md">Linux headless &amp; AppArmor guide</a>
-        <a class="btn" href="log/2026-11-20-linux-headless-readiness.html">Latest engineering log</a>
+        <a class="btn" href="log/2026-11-20-ubuntu-apparmor-live-proof.html">Latest engineering log</a>
       </div>
     </section>
 
@@ -201,6 +201,44 @@
         Dated records of verified changes, CI outcomes, and operational milestones on
         <code>main</code>.
       </p>
+
+      <article class="log-entry">
+        <div class="log-meta">
+          <time datetime="2026-11-20">2026-11-20</time>
+          <span>Commits <code>8dfb7e0..59a6c0f</code></span>
+          <span>CI: 8/8 <code>quality.yml</code> green · <code>v0.1.2</code> line</span>
+        </div>
+        <h3>
+          <a href="log/2026-11-20-ubuntu-apparmor-live-proof.html">
+            Ubuntu 26.04 AppArmor 5.0.2 &amp; systemd confinement fixes and live stock-enforced multi-step proof
+          </a>
+        </h3>
+        <ul class="log-list">
+          <li>
+            <strong>AppArmor ABI 4.0 unprivileged stacking (<code>//&amp;unconfined</code>):</strong>
+            Added <code>enforced_profile_name()</code> in <code>octopus-linux-process-authority</code>
+            and stacked peer <code>signal</code>/<code>ptrace</code> rules while continuing to reject
+            non-enforced or multi-profile stacked labels.
+          </li>
+          <li>
+            <strong>Cross-mount-namespace Unix socket delegation under <code>systemd</code> hardening:</strong>
+            Added <code>flags=(attach_disconnected, mediate_deleted)</code> to generated AppArmor
+            profiles so confined children can delegate via <code>control.sock</code> across private
+            mount namespaces while keeping <code>allow_sandbox_delegation: false</code> denied.
+          </li>
+          <li>
+            <strong>Control socket slots &amp; live proof:</strong>
+            Granted <code>app_server_control_root</code> write slots across 36 <code>life.json</code>
+            descriptors and verified a stock <code>sandbox_mode: "enforced"</code> multi-step run on
+            Ubuntu 26.04 LTS (76 ledger movements, 9 leaf profiles loaded/enforced/removed cleanly,
+            0 blocking denials, <code>octopus doctor</code> 100% PASS, <code>quality.yml</code>
+            run <code>44807531016</code> 8/8 green).
+          </li>
+        </ul>
+        <p>
+          <a href="log/2026-11-20-ubuntu-apparmor-live-proof.html">Read full entry &rarr;</a>
+        </p>
+      </article>
 
       <article class="log-entry">
         <div class="log-meta">

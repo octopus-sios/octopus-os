@@ -310,6 +310,10 @@ h3 {
   padding: 1.4rem;
 }
 
+.log-entry + .log-entry {
+  margin-top: 1rem;
+}
+
 .log-meta {
   display: flex;
   flex-wrap: wrap;
