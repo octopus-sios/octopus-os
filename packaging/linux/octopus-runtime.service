@@ -1,0 +1,37 @@
+[Unit]
+Description=Octopus headless runtime
+Documentation=https://github.com/octopus-sios/octopus-os/blob/main/docs/linux.md
+After=network-online.target octopus-process-authority.service
+Wants=network-online.target octopus-process-authority.service
+
+[Service]
+Type=simple
+User=octopus
+Group=octopus
+SupplementaryGroups=octopus-process
+WorkingDirectory=/var/lib/octopus
+Environment=HOME=/var/lib/octopus
+Environment=OCTOPUS_HOME=/var/lib/octopus/.octopus
+Environment=OCTOPUS_INSTALLATION_ROOT=/opt/octopus/current
+Environment=OCTOPUS_RUNTIME_BIN=/opt/octopus/current/bin/octopus
+Environment=OCTOPUS_SOURCE_REGISTRY=/opt/octopus/current/registry
+Environment=PATH=/opt/octopus/current/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=-/etc/octopus/runtime.env
+ExecStart=/opt/octopus/current/bin/octopus up
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=60s
+KillMode=mixed
+LimitNOFILE=65536
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target

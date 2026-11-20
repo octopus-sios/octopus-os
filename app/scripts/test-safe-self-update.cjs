@@ -4,8 +4,8 @@ const fs = require("node:fs");
 const net = require("node:net");
 const os = require("node:os");
 const path = require("node:path");
-const { bundles, buildInfo, swapBundles, rollbackBundles, control, readLedgerTurns, readTurnsInFlight, blockingTurns, newInterfaceFailures,
-  packageAction, restartRuntime, parseArgs } = require("./safe-self-update.cjs");
+const { defaultTarget, resolveTarget, bundles, buildInfo, swapBundles, rollbackBundles, control, readLedgerTurns, readTurnsInFlight, blockingTurns, newInterfaceFailures,
+  packageAction, buildStaging, verifyStaging, validateSystemdUnit, restartRuntime, parseArgs } = require("./safe-self-update.cjs");
 
 const tmpBase = process.platform === "darwin" ? "/private/tmp" : os.tmpdir();
 const roots = [];
@@ -26,6 +26,53 @@ function fakeLayout({ live = "live", staging = "staging", prev = null } = {}) {
   if (live) fakeBundle(layout.live, live);
   if (staging) fakeBundle(layout.staging, staging);
   if (prev) fakeBundle(layout.prev, prev);
+  return layout;
+}
+
+function fakeCliBundle(bundle, revision, { doctorExit = 0, binaryScript = null, corruptSha = false } = {}) {
+  const binDir = path.join(bundle, "bin");
+  fs.mkdirSync(binDir, { recursive: true });
+  const octopusBin = path.join(binDir, "octopus");
+  const script = binaryScript ?? `#!/bin/sh\nif [ "$1" = "doctor" ]; then echo "doctor ok"; exit ${doctorExit}; fi\nexit 0\n`;
+  fs.writeFileSync(octopusBin, script, { mode: 0o755 });
+  const bytes = fs.readFileSync(octopusBin);
+  const sha256 = corruptSha ? "0".repeat(64) : crypto.createHash("sha256").update(bytes).digest("hex");
+  fs.writeFileSync(path.join(bundle, "runtime-build-receipt.json"), JSON.stringify({
+    schema: "octopus.cli_runtime_distribution",
+    schema_version: 1,
+    package_version: "0.1.0",
+    revision,
+    modifiedSource: false,
+    builtAt: "2026-11-20T00:00:00.000Z",
+    platform: "linux",
+    architecture: "x64",
+    target: "x86_64-unknown-linux-gnu",
+    components: { client_filesystem: false, desktop_native: false, managed_codex: true, code_signing: false },
+    binaries: [{ path: "bin/octopus", bytes: bytes.length, sha256 }],
+  }, null, 2) + "\n");
+}
+
+function fakeCliLayout({ live = "cli-live", staging = "cli-staging", prev = null, symlink = false, doctorExit = 0 } = {}) {
+  const layout = bundles(path.join(tempRoot(), "cli"), { target: "cli" });
+  fs.mkdirSync(layout.buildRoot, { recursive: true });
+  if (symlink) {
+    const releases = path.join(layout.buildRoot, "releases");
+    if (live) {
+      const liveDir = path.join(releases, "live-rel");
+      fakeCliBundle(liveDir, live, { doctorExit });
+      fs.symlinkSync(liveDir, layout.live);
+    }
+    if (staging) fakeCliBundle(layout.staging, staging, { doctorExit });
+    if (prev) {
+      const prevDir = path.join(releases, "prev-rel");
+      fakeCliBundle(prevDir, prev, { doctorExit });
+      fs.symlinkSync(prevDir, layout.prev);
+    }
+    return layout;
+  }
+  if (live) fakeCliBundle(layout.live, live, { doctorExit });
+  if (staging) fakeCliBundle(layout.staging, staging, { doctorExit });
+  if (prev) fakeCliBundle(layout.prev, prev, { doctorExit });
   return layout;
 }
 
@@ -386,6 +433,171 @@ async function main() {
   layout = fakeLayout();
   await assert.rejects(restartRuntime(layout, tempRoot(), { ...options, swap: true, readTurns: idle }), /no runtime answers/);
   assert.equal(buildInfo(layout.live).revision, "live");
+
+  // Linux / headless CLI self-update contracts
+  assert.equal(defaultTarget("linux"), "cli");
+  assert.equal(defaultTarget("darwin"), "mac");
+  assert.equal(resolveTarget("auto", "linux"), "cli");
+  assert.equal(resolveTarget("auto", "darwin"), "mac");
+  assert.equal(resolveTarget("cli", "darwin"), "cli");
+  assert.throws(() => resolveTarget("windows"), /unknown --target/);
+  assert.equal(validateSystemdUnit("octopus-runtime.service"), "octopus-runtime.service");
+  assert.throws(() => validateSystemdUnit("-bad"), /invalid --systemd-unit/);
+  assert.throws(() => validateSystemdUnit("a;rm -rf /"), /invalid --systemd-unit/);
+
+  // CLI dry-run buildStaging targets build-cli.cjs without touching live
+  let cliLayout = fakeCliLayout();
+  const dryBuild = buildStaging(cliLayout, { dryRun: true });
+  assert.equal(dryBuild.applied, false);
+  assert.equal(dryBuild.target, "cli");
+  assert.ok(dryBuild.command.some((part) => part.endsWith("build-cli.cjs")));
+  assert.equal(dryBuild.bundle, cliLayout.staging);
+  assert.equal(buildInfo(cliLayout.live).revision, "cli-live");
+  assert.equal(buildInfo(cliLayout.live).schema, "octopus.cli_runtime_distribution");
+
+  // CLI directory swap and rollback
+  assert.equal(swapBundles(cliLayout, { dryRun: true }).applied, false);
+  assert.equal(swapBundles(cliLayout).revision, "cli-staging");
+  assert.equal(buildInfo(cliLayout.prev).revision, "cli-live");
+  assert.equal(fs.existsSync(cliLayout.staging), false);
+  assert.equal(rollbackBundles(cliLayout).revision, "cli-live");
+  assert.equal(buildInfo(cliLayout.failed).revision, "cli-staging");
+
+  // CLI atomic symlink swap (promoting staging dir -> releases/) and rollback
+  cliLayout = fakeCliLayout({ symlink: true });
+  const origLiveTarget = fs.readlinkSync(cliLayout.live);
+  const symPlan = swapBundles(cliLayout, { dryRun: true });
+  assert.equal(symPlan.applied, false);
+  assert.equal(symPlan.mode, "symlink");
+  const symSwapped = swapBundles(cliLayout);
+  assert.equal(symSwapped.applied, true);
+  assert.equal(symSwapped.mode, "symlink");
+  assert.equal(symSwapped.revision, "cli-staging");
+  assert.equal(fs.lstatSync(cliLayout.live).isSymbolicLink(), true);
+  assert.equal(fs.readlinkSync(cliLayout.prev), origLiveTarget);
+  assert.notEqual(fs.readlinkSync(cliLayout.live), origLiveTarget);
+  assert.equal(fs.existsSync(cliLayout.staging), false);
+  const symRolledBack = rollbackBundles(cliLayout);
+  assert.equal(symRolledBack.applied, true);
+  assert.equal(symRolledBack.mode, "symlink");
+  assert.equal(symRolledBack.revision, "cli-live");
+  assert.equal(fs.readlinkSync(cliLayout.live), origLiveTarget);
+  assert.equal(fs.readlinkSync(cliLayout.failed), symSwapped.target);
+  assert.equal(fs.lstatSync(cliLayout.prev, { throwIfNoEntry: false }), undefined);
+
+  // CLI verifyStaging: receipt binary SHA-256 + octopus doctor (pass, corrupt sha, failing doctor)
+  const cliHome = tempRoot();
+  fs.mkdirSync(path.join(cliHome, "registry"), { recursive: true });
+  cliLayout = fakeCliLayout({ doctorExit: 0 });
+  let verified = await verifyStaging(cliLayout, cliHome, { smoke: false });
+  assert.equal(verified.ok, true);
+  assert.equal(verified.checks.find((row) => row.name === "cli_binaries")?.ok, true);
+  assert.equal(verified.checks.find((row) => row.name === "doctor_home")?.ok, true);
+
+  cliLayout = fakeCliLayout({ doctorExit: 1 });
+  verified = await verifyStaging(cliLayout, cliHome, { smoke: false });
+  assert.equal(verified.ok, false);
+  assert.equal(verified.checks.find((row) => row.name === "doctor_home")?.ok, false);
+
+  cliLayout = fakeCliLayout();
+  fakeCliBundle(cliLayout.staging, "cli-corrupt", { corruptSha: true });
+  verified = await verifyStaging(cliLayout, cliHome, { smoke: false });
+  assert.equal(verified.ok, false);
+  assert.equal(verified.checks.find((row) => row.name === "cli_binaries")?.ok, false);
+
+  // CLI headless readTurnsInFlight uses ledger directly when Home has no client/ directory
+  const headlessHome = tempRoot();
+  const headlessLedger = fakeLedger(headlessHome);
+  headlessLedger.dispatch("headless_open", "turn/start", 100);
+  headlessLedger.dispatch("headless_closed", "turn/start", 100);
+  headlessLedger.close("headless_closed", "turn.completed", 100);
+  cliLayout = fakeCliLayout();
+  const headlessTurns = await readTurnsInFlight(cliLayout.live, headlessHome, { sinceUnixMs: 50 });
+  assert.deepEqual(headlessTurns.map((turn) => [turn.run_id, turn.source, turn.turn_open]), [
+    ["headless_open", "ledger", true],
+  ]);
+
+  // CLI symlink swap + control-socket restart + auto-rollback on interface regression
+  cliLayout = fakeCliLayout({ symlink: true });
+  runtime = await fakeRuntime([], [[failure("world_a")], [failure("world_b")], [failure("world_a")]]);
+  try {
+    result = await restartRuntime(cliLayout, runtime.home, { ...options, swap: true, readTurns: idle });
+    assert.equal(result.ok, false);
+    assert.equal(result.restart_method, "socket");
+    assert.equal(result.rollback_restart_method, "socket");
+    assert.deepEqual(result.new_interface_failures, ["world_b"]);
+    assert.equal(result.rolled_back, true);
+    assert.equal(result.recovered, true);
+    assert.equal(buildInfo(cliLayout.live).revision, "cli-live");
+    assert.equal(buildInfo(cliLayout.failed).revision, "cli-staging");
+  } finally { await runtime.close(); }
+
+  // CLI systemd restart mode (explicit) and validation
+  cliLayout = fakeCliLayout();
+  runtime = await fakeRuntime([]);
+  try {
+    await assert.rejects(
+      restartRuntime(cliLayout, runtime.home, { ...options, swap: true, readTurns: idle, restartMode: "systemd" }),
+      /requires --systemd-unit/,
+    );
+    const systemctlCalls = [];
+    result = await restartRuntime(cliLayout, runtime.home, {
+      ...options, swap: true, readTurns: idle,
+      restartMode: "systemd", systemdUnit: "octopus-runtime.service", systemdScope: "system",
+      runSystemctl: async (unit, scope) => {
+        systemctlCalls.push([unit, scope]);
+        runtime.state.started += 1;
+        return { ok: true };
+      },
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.restart_method, "systemd");
+    assert.equal(result.revision, "cli-staging");
+    assert.deepEqual(systemctlCalls, [["octopus-runtime.service", "system"]]);
+    assert.equal(runtime.state.requests.includes("restart"), false);
+  } finally { await runtime.close(); }
+
+  // CLI rollback with systemd fallback when crashed upgrade leaves no runtime answering control socket
+  cliLayout = fakeCliLayout();
+  runtime = await fakeRuntime([]);
+  let crashedServer = null;
+  try {
+    const systemctlCalls = [];
+    runtime.state.onRequest = (request) => {
+      if (request === "restart") {
+        // Simulate upgraded runtime exiting/crashing so control socket disappears
+        runtime.close().then(() => {
+          fs.rmSync(path.join(runtime.home, "state", "runtime-instance", "control.sock"), { force: true });
+        });
+      }
+    };
+    result = await restartRuntime(cliLayout, runtime.home, {
+      timeoutMs: 800, swap: true, readTurns: idle,
+      systemdUnit: "octopus-runtime.service", systemdScope: "user",
+      runSystemctl: async (unit, scope) => {
+        systemctlCalls.push([unit, scope]);
+        // Bring a healthy rolled-back runtime back up on the control socket
+        const sock = path.join(runtime.home, "state", "runtime-instance", "control.sock");
+        fs.rmSync(sock, { force: true });
+        crashedServer = net.createServer((socket) => {
+          socket.once("data", () => {
+            socket.end(`${JSON.stringify({ outcome: "status", pid: 99, phase: "ready", started_at_unix_ms: 999, stopping: null, interface_failures: [] })}\n`);
+          });
+        });
+        await new Promise((resolve) => crashedServer.listen(sock, resolve));
+        return { ok: true };
+      },
+    });
+    assert.equal(result.ok, false);
+    assert.equal(result.rolled_back, true);
+    assert.equal(result.recovered, true);
+    assert.equal(result.rollback_restart_method, "systemd_fallback");
+    assert.deepEqual(systemctlCalls, [["octopus-runtime.service", "user"]]);
+    assert.equal(buildInfo(cliLayout.live).revision, "cli-live");
+    assert.equal(buildInfo(cliLayout.failed).revision, "cli-staging");
+  } finally {
+    if (crashedServer) await new Promise((done) => crashedServer.close(done));
+  }
   console.log("safe self-update checks passed");
 }
 

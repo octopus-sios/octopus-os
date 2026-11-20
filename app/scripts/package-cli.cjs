@@ -1,16 +1,33 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const { spawnSync } = require("node:child_process");
 const { copyTree, copyFile } = require("./package-copy.cjs");
 const { createRuntimePackager } = require("./runtime-package.cjs");
 const { SUPPORTED_TARGETS, resolveCliTarget, takeTargetArgument } = require("./cli-target.cjs");
 
-function packageCliRuntime({ appRoot = path.resolve(__dirname, ".."), target = null } = {}) {
+function gitBuildMetadata(repoRoot) {
+  const revision = spawnSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" });
+  const sourceStatus = spawnSync("git", ["status", "--porcelain", "--untracked-files=normal"], { cwd: repoRoot, encoding: "utf8" });
+  return {
+    revision: revision.status === 0 ? revision.stdout.trim() : null,
+    modifiedSource: sourceStatus.status === 0 ? Boolean(sourceStatus.stdout.trim()) : null,
+    builtAt: new Date().toISOString(),
+  };
+}
+
+function resolveCliOutputRoot(appRoot, outputRoot) {
+  const configured = outputRoot ?? process.env.OCTOPUS_CLI_RUNTIME_DIR ?? null;
+  if (configured !== null && configured !== "") return path.resolve(configured);
+  return path.join(appRoot, "build", "cli", "runtime");
+}
+
+function packageCliRuntime({ appRoot = path.resolve(__dirname, ".."), target = null, outputRoot = null } = {}) {
   const cli = resolveCliTarget({ target });
   appRoot = fs.realpathSync(appRoot);
   const repoRoot = path.dirname(appRoot);
-  const outputParent = path.join(appRoot, "build", "cli");
-  const outputRoot = path.join(outputParent, "runtime");
+  const resolvedOutputRoot = resolveCliOutputRoot(appRoot, outputRoot);
+  const outputParent = path.dirname(resolvedOutputRoot);
   fs.mkdirSync(outputParent, { recursive: true });
   const stage = fs.mkdtempSync(path.join(outputParent, ".runtime-stage-"));
   let previous = null;
@@ -60,9 +77,11 @@ function packageCliRuntime({ appRoot = path.resolve(__dirname, ".."), target = n
       packager.sealProviderSigningInputs(providerSigning);
     }
     packager.validateBundledLayout([baseline, packages], installationBinaries, ownerExecutables);
+    const git = gitBuildMetadata(repoRoot);
     const receipt = {
       schema: "octopus.cli_runtime_distribution", schema_version: 1,
       package_version: JSON.parse(fs.readFileSync(path.join(appRoot, "package.json"), "utf8")).version,
+      revision: git.revision, modifiedSource: git.modifiedSource, builtAt: git.builtAt,
       platform: cli.platform, architecture: cli.architecture, target: cli.triple, components: cli.components,
       binaries: installationBinaries.map((binary) => {
         const bytes = fs.readFileSync(path.join(stage, "bin", binary));
@@ -70,26 +89,40 @@ function packageCliRuntime({ appRoot = path.resolve(__dirname, ".."), target = n
       }),
     };
     fs.writeFileSync(path.join(stage, "runtime-build-receipt.json"), `${JSON.stringify(receipt, null, 2)}\n`);
-    if (fs.existsSync(outputRoot)) {
-      if (!fs.lstatSync(outputRoot).isDirectory()) throw new Error(`Runtime output is not a plain directory: ${outputRoot}`);
+    if (fs.existsSync(resolvedOutputRoot)) {
+      if (!fs.lstatSync(resolvedOutputRoot).isDirectory()) throw new Error(`Runtime output is not a plain directory: ${resolvedOutputRoot}`);
       previous = fs.mkdtempSync(path.join(outputParent, ".runtime-previous-"));
       fs.rmdirSync(previous);
-      fs.renameSync(outputRoot, previous);
+      fs.renameSync(resolvedOutputRoot, previous);
     }
-    try { fs.renameSync(stage, outputRoot); }
-    catch (error) { if (previous) fs.renameSync(previous, outputRoot); previous = null; throw error; }
+    try { fs.renameSync(stage, resolvedOutputRoot); }
+    catch (error) { if (previous) fs.renameSync(previous, resolvedOutputRoot); previous = null; throw error; }
     if (previous) fs.rmSync(previous, { recursive: true });
-    return { outputRoot, target: cli.triple, binaryCount: installationBinaries.length, ownerExecutableCount: ownerExecutables.size };
+    return { outputRoot: resolvedOutputRoot, target: cli.triple, binaryCount: installationBinaries.length, ownerExecutableCount: ownerExecutables.size };
   } finally {
     if (fs.existsSync(stage)) fs.rmSync(stage, { recursive: true });
   }
 }
 
+function takeOutputArgument(argv) {
+  let outputRoot = null;
+  const rest = [];
+  for (const argument of argv) {
+    if (!argument.startsWith("--output")) { rest.push(argument); continue; }
+    const value = argument.startsWith("--output=") ? argument.slice("--output=".length) : "";
+    if (!value) throw new Error("--output requires a value, as --output=<directory>");
+    if (outputRoot !== null) throw new Error("--output is given more than once");
+    outputRoot = path.resolve(value);
+  }
+  return { outputRoot, rest };
+}
+
 if (require.main === module) {
   try {
-    const { target, rest } = takeTargetArgument(process.argv.slice(2));
-    if (rest.length) throw new Error(`Usage: node app/scripts/package-cli.cjs [--target=<${SUPPORTED_TARGETS.join("|")}>] (consumes target/release binaries)`);
-    console.log(JSON.stringify(packageCliRuntime({ target })));
+    const targetParsed = takeTargetArgument(process.argv.slice(2));
+    const { outputRoot, rest } = takeOutputArgument(targetParsed.rest);
+    if (rest.length) throw new Error(`Usage: node app/scripts/package-cli.cjs [--target=<${SUPPORTED_TARGETS.join("|")}>] [--output=<directory>] (consumes target/release binaries)`);
+    console.log(JSON.stringify(packageCliRuntime({ target: targetParsed.target, outputRoot })));
     require("./build-space-notice.cjs").printBuildSpaceNotice();
   } catch (error) {
     console.error(`CLI runtime packaging failed: ${error.message}`);
@@ -97,4 +130,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { packageCliRuntime };
+module.exports = { packageCliRuntime, resolveCliOutputRoot, takeOutputArgument };

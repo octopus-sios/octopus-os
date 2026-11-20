@@ -130,6 +130,84 @@ install Linux versions of its providers or make macOS-only integrations
 available. Compose a fresh Home with packages and host paths for the target
 machine; existing Homes and their execution evidence are not migrated.
 
+## Running the headless runtime under systemd
+
+A hardened systemd unit template is provided at
+[`packaging/linux/octopus-runtime.service`](../packaging/linux/octopus-runtime.service).
+It runs `octopus up` as a dedicated non-root `octopus` user in the
+`octopus-process` group, with `Restart=on-failure`, `RestartSec=5s`,
+`TimeoutStopSec=60s`, `UMask=0077`, and read-only OS directories
+(`ProtectSystem=full`, `NoNewPrivileges=yes`).
+
+1. Create the service account and directories (install `octopus-process-authority.service`
+   first so the `octopus-process` group exists, or override `SupplementaryGroups=` in a
+   systemd drop-in if running without AppArmor process isolation):
+
+```sh
+sudo useradd --system --create-home --home-dir /var/lib/octopus --shell /usr/sbin/nologin octopus
+sudo install -d -o octopus -g octopus -m 0700 /var/lib/octopus/.octopus
+sudo install -d -o root -g root -m 0755 /opt/octopus /etc/octopus
+```
+
+2. Install either a release tarball (`Octopus-<version>-linux-<arch>.tar.gz`) or a local
+   `npm --prefix app run build:cli` output under `/opt/octopus/releases/<release>` and point
+   `/opt/octopus/current` to it:
+
+```sh
+sudo ln -sfn /opt/octopus/releases/<release> /opt/octopus/current
+```
+
+   To run directly from a checkout's `app/build/cli/runtime` directory or with a different
+   service user/Home, place overrides in `/etc/octopus/runtime.env` (`chmod 0600`) and a
+   systemd drop-in (`sudo systemctl edit octopus-runtime.service`).
+
+3. Install and start the unit:
+
+```sh
+sudo install -o root -g root -m 0644 packaging/linux/octopus-runtime.service /etc/systemd/system/octopus-runtime.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now octopus-runtime.service
+systemctl status octopus-runtime.service
+journalctl -u octopus-runtime.service -f
+```
+
+Use `octopus restart` (or `systemctl restart octopus-runtime.service`) when reloading the
+runtime. Because the unit uses `Restart=on-failure`, `octopus down` performs a clean exit
+`0` and leaves the service stopped until started again.
+
+## Safe self-update on Linux
+
+`app/scripts/safe-self-update.cjs` automatically selects `--target=cli` on Linux (or pass
+`--target=cli` explicitly on any host). It stages into `runtime.staging` without touching
+the live runtime, checks binary SHA-256 digests from `runtime-build-receipt.json` and
+runs `octopus doctor`, guards against open turns in the movement ledger, swaps atomically
+(directory rename for `app/build/cli/runtime`, or single-rename symlink replacement when
+the live path is a symlink), requests `RuntimeControlRequest::Restart` over the control
+socket, waits for `ready`, and rolls back automatically if any previously healthy
+interface fails.
+
+From a checkout running out of `app/build/cli/runtime`:
+
+```sh
+node app/scripts/safe-self-update.cjs status --target=cli
+node app/scripts/safe-self-update.cjs build --target=cli
+node app/scripts/safe-self-update.cjs verify --target=cli
+node app/scripts/safe-self-update.cjs restart --target=cli --swap \
+  --systemd-unit=octopus-runtime.service \
+  --caller-run=<run id> --detach --log=/tmp/octopus-self-update.log
+```
+
+Options useful on headless Linux hosts:
+
+- `--build-root=<dir>`: select a custom root containing `runtime` (plain directory or
+  symlink), `runtime.staging`, `runtime.prev`, and `runtime.failed`.
+- `--systemd-unit=<unit>` and `--systemd-scope=system|user`: fall back to
+  `systemctl [--user] restart <unit>` if the control socket becomes unreachable during
+  restart or rollback recovery. Pass `--restart-mode=systemd` to always restart via
+  `systemctl` after the turn guard and swap.
+- `--no-smoke`: skip the disposable-Home smoke test during `verify` when only checking
+  receipt hashes and `octopus doctor` against the configured Home.
+
 The platform contracts are documented by
 [AppArmor](https://apparmor.net/man/4.0/apparmor.d/), its
 [policy loader](https://manpages.ubuntu.com/manpages/noble/man8/apparmor_parser.8.html)

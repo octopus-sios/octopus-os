@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const fs = require("node:fs");
+const crypto = require("node:crypto");
 const net = require("node:net");
 const os = require("node:os");
 const path = require("node:path");
@@ -9,15 +10,68 @@ const { setTimeout: delay } = require("node:timers/promises");
 const appRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(appRoot, "..");
 
-function bundles(buildRoot = path.join(appRoot, "build")) {
-  const at = (name) => path.join(buildRoot, name);
-  return { buildRoot, live: at("Octopus.app"), staging: at("Octopus.staging.app"), prev: at("Octopus.prev.app"), failed: at("Octopus.failed.app") };
+function defaultTarget(platform = process.platform) {
+  return platform === "darwin" ? "mac" : "cli";
 }
-const installation = (bundle) => path.join(bundle, "Contents", "Resources", "app");
+
+function resolveTarget(value, platform = process.platform) {
+  if (value == null || value === "auto") return defaultTarget(platform);
+  if (value === "mac" || value === "cli") return value;
+  throw Object.assign(new Error(`unknown --target '${value}'; expected mac or cli`), { usage: true });
+}
+
+function bundles(buildRoot, { target = "mac" } = {}) {
+  const resolvedTarget = resolveTarget(target);
+  const root = buildRoot ?? (resolvedTarget === "cli" ? path.join(appRoot, "build", "cli") : path.join(appRoot, "build"));
+  const at = (name) => path.join(root, name);
+  if (resolvedTarget === "cli") {
+    return { target: "cli", buildRoot: root, live: at("runtime"), staging: at("runtime.staging"), prev: at("runtime.prev"), failed: at("runtime.failed") };
+  }
+  return { target: "mac", buildRoot: root, live: at("Octopus.app"), staging: at("Octopus.staging.app"), prev: at("Octopus.prev.app"), failed: at("Octopus.failed.app") };
+}
+
+function isMacBundle(bundle) {
+  return bundle.endsWith(".app") || fs.existsSync(path.join(bundle, "Contents", "Resources", "app"));
+}
+
+const installation = (bundle) => (isMacBundle(bundle) ? path.join(bundle, "Contents", "Resources", "app") : bundle);
 const runtimeBinary = (bundle) => path.join(installation(bundle), "bin", "octopus");
 
 function buildInfo(bundle) {
-  try { return JSON.parse(fs.readFileSync(path.join(installation(bundle), "build-info.json"), "utf8")); } catch { return null; }
+  const root = installation(bundle);
+  try { return JSON.parse(fs.readFileSync(path.join(root, "build-info.json"), "utf8")); } catch {}
+  try {
+    const receipt = JSON.parse(fs.readFileSync(path.join(root, "runtime-build-receipt.json"), "utf8"));
+    if (receipt?.schema !== "octopus.cli_runtime_distribution") return null;
+    return {
+      schema: receipt.schema,
+      packageVersion: receipt.package_version ?? null,
+      revision: receipt.revision ?? receipt.package_version ?? null,
+      modifiedSource: receipt.modifiedSource ?? null,
+      builtAt: receipt.builtAt ?? null,
+      platform: receipt.platform ?? null,
+      architecture: receipt.architecture ?? null,
+      target: receipt.target ?? null,
+      binaries: Array.isArray(receipt.binaries) ? receipt.binaries : null,
+    };
+  } catch { return null; }
+}
+
+function isSymlink(file) {
+  return Boolean(fs.lstatSync(file, { throwIfNoEntry: false })?.isSymbolicLink());
+}
+
+function pathExists(file) {
+  return Boolean(fs.lstatSync(file, { throwIfNoEntry: false }));
+}
+
+function atomicSymlink(linkPath, targetPath) {
+  const parent = path.dirname(linkPath);
+  fs.mkdirSync(parent, { recursive: true });
+  const temp = path.join(parent, `.${path.basename(linkPath)}.link-${process.pid}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`);
+  fs.symlinkSync(targetPath, temp);
+  try { fs.renameSync(temp, linkPath); }
+  catch (error) { fs.rmSync(temp, { force: true }); throw error; }
 }
 
 function requireBundle(bundle) {
@@ -27,9 +81,50 @@ function requireBundle(bundle) {
   return bundle;
 }
 
+function releaseNameFor(info) {
+  const raw = typeof info?.revision === "string" && info.revision ? info.revision.slice(0, 12) : "release";
+  const safe = raw.replace(/[^A-Za-z0-9._-]/g, "-");
+  return `${safe}-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
+}
+
 function swapBundles(layout, { dryRun = false } = {}) {
   requireBundle(layout.staging);
-  const hadLive = fs.existsSync(layout.live);
+  const liveStat = fs.lstatSync(layout.live, { throwIfNoEntry: false });
+  const stagingIsLink = isSymlink(layout.staging);
+  if (liveStat?.isSymbolicLink() || stagingIsLink) {
+    const hadLive = Boolean(liveStat);
+    if (hadLive) {
+      if (!liveStat.isSymbolicLink()) throw new Error(`${layout.live} must be a symlink when staging is a symlink`);
+      requireBundle(layout.live);
+    }
+    const prevTarget = hadLive ? fs.readlinkSync(layout.live) : null;
+    const stagingInfo = buildInfo(layout.staging);
+    const promotedDir = stagingIsLink ? null : path.join(layout.buildRoot, "releases", releaseNameFor(stagingInfo));
+    const nextTarget = stagingIsLink ? fs.readlinkSync(layout.staging) : promotedDir;
+    const plan = [
+      ...(promotedDir ? [`move ${layout.staging} -> ${promotedDir}`] : []),
+      ...(hadLive ? [`symlink ${layout.prev} -> ${prevTarget}`] : []),
+      `symlink ${layout.live} -> ${nextTarget}`,
+      ...(stagingIsLink ? [`remove symlink ${layout.staging}`] : []),
+    ];
+    if (dryRun) return { applied: false, mode: "symlink", plan };
+    if (promotedDir) {
+      fs.mkdirSync(path.dirname(promotedDir), { recursive: true });
+      fs.renameSync(layout.staging, promotedDir);
+    }
+    try {
+      if (hadLive) atomicSymlink(layout.prev, prevTarget);
+      atomicSymlink(layout.live, nextTarget);
+      if (stagingIsLink) fs.unlinkSync(layout.staging);
+    } catch (error) {
+      if (promotedDir && fs.existsSync(promotedDir) && !fs.existsSync(layout.staging)) {
+        try { fs.renameSync(promotedDir, layout.staging); } catch {}
+      }
+      throw error;
+    }
+    return { applied: true, mode: "symlink", plan, revision: buildInfo(layout.live).revision, target: fs.readlinkSync(layout.live) };
+  }
+  const hadLive = Boolean(liveStat);
   const plan = [`remove ${layout.prev}`, ...(hadLive ? [`rename ${layout.live} -> ${layout.prev}`] : []), `rename ${layout.staging} -> ${layout.live}`];
   if (dryRun) return { applied: false, plan };
   if (hadLive) {
@@ -44,6 +139,21 @@ function swapBundles(layout, { dryRun = false } = {}) {
 
 function rollbackBundles(layout, { dryRun = false } = {}) {
   requireBundle(layout.prev);
+  if (isSymlink(layout.prev)) {
+    const prevTarget = fs.readlinkSync(layout.prev);
+    const hadLive = isSymlink(layout.live);
+    const failedTarget = hadLive ? fs.readlinkSync(layout.live) : null;
+    const plan = [
+      ...(hadLive ? [`symlink ${layout.failed} -> ${failedTarget}`] : []),
+      `symlink ${layout.live} -> ${prevTarget}`,
+      `remove symlink ${layout.prev}`,
+    ];
+    if (dryRun) return { applied: false, mode: "symlink", plan };
+    if (hadLive) atomicSymlink(layout.failed, failedTarget);
+    atomicSymlink(layout.live, prevTarget);
+    fs.unlinkSync(layout.prev);
+    return { applied: true, mode: "symlink", plan, revision: buildInfo(layout.live).revision, target: fs.readlinkSync(layout.live) };
+  }
   const hadLive = fs.existsSync(layout.live);
   const plan = [`remove ${layout.failed}`, ...(hadLive ? [`rename ${layout.live} -> ${layout.failed}`] : []), `rename ${layout.prev} -> ${layout.live}`];
   if (dryRun) return { applied: false, plan };
@@ -100,10 +210,26 @@ function octopus(bundle, home, args, options = {}) {
   return spawnSync(runtimeBinary(bundle), args, { env: runtimeEnv(bundle, home), encoding: "utf8", maxBuffer: 64 * 1024 * 1024, ...options });
 }
 
+function electronModulePath(bundle, filename) {
+  const bundled = path.join(installation(bundle), "electron", filename);
+  if (fs.existsSync(bundled)) return bundled;
+  if (!isMacBundle(bundle)) {
+    const checkout = path.join(appRoot, "electron", filename);
+    if (fs.existsSync(checkout)) return checkout;
+  }
+  return null;
+}
+
+function requireElectronModule(bundle, filename) {
+  const file = electronModulePath(bundle, filename);
+  if (!file) throw new Error(`required client module '${filename}' is unavailable for bundle ${bundle}`);
+  return require(file);
+}
+
 async function readClientTurns(bundle, home) {
   const root = installation(bundle);
-  const { createProjectionStore } = require(path.join(root, "electron", "projection.cjs"));
-  const { projectionReadRequest } = require(path.join(root, "electron", "projectionReadContract.cjs"));
+  const { createProjectionStore } = requireElectronModule(bundle, "projection.cjs");
+  const { projectionReadRequest } = requireElectronModule(bundle, "projectionReadContract.cjs");
   const store = createProjectionStore({
     resolveRepoRoot: () => repoRoot,
     sourceRegistry: () => path.join(root, "registry"),
@@ -114,10 +240,14 @@ async function readClientTurns(bundle, home) {
   });
   try {
     const scope = await store.read(projectionReadRequest("projection.operator.os.scope"));
+    if (!isMacBundle(bundle) && !Array.isArray(scope?.client_runs) && scope?.status !== "ready") {
+      return { chats: [], clientRunIds: [] };
+    }
     if (!Array.isArray(scope.client_runs) || scope.client_runs.some((row) => !nonempty(row?.run_id))) {
       throw new Error("client turn scope is unavailable");
     }
     const runIds = scope.client_runs.map((row) => row.run_id), scopedRuns = new Set(runIds);
+    if (runIds.length === 0) return { chats: [], clientRunIds: [] };
     const status = await store.read(projectionReadRequest("projection.operator.chats.status", { run_ids: runIds }));
     if (!Array.isArray(status.chats)) throw new Error("client turn status is unavailable");
     const chats = status.chats.filter((chat) => scopedRuns.has(chat?.run_id))
@@ -297,6 +427,9 @@ async function readLedgerTurns(home, { sinceUnixMs = 0, skipRuns = [] } = {}) {
 }
 
 async function readTurnsInFlight(bundle, home, { sinceUnixMs = 0 } = {}) {
+  if (!isMacBundle(bundle) && (!electronModulePath(bundle, "projection.cjs") || !fs.existsSync(path.join(home, "client")))) {
+    return readLedgerTurns(home, { sinceUnixMs, skipRuns: [] });
+  }
   const { chats, clientRunIds } = await readClientTurns(bundle, home);
   const background = await readLedgerTurns(home, { sinceUnixMs, skipRuns: clientRunIds });
   return [...chats.map((chat) => ({ ...chat, source: "client" })), ...background];
@@ -316,29 +449,43 @@ function newInterfaceFailures(before, after) {
 const lastLines = (result) => `${result.stdout ?? ""}${result.stderr ?? ""}`.trim().split("\n").slice(-3).join(" | ");
 
 function buildStaging(layout, { dryRun = false } = {}) {
+  const liveIdentity = () => {
+    const root = installation(layout.live);
+    for (const marker of ["build-info.json", "runtime-build-receipt.json"]) {
+      const stat = fs.statSync(path.join(root, marker), { throwIfNoEntry: false });
+      if (stat) return `${marker}:${stat.ino}:${stat.mtimeMs}`;
+    }
+    return null;
+  };
+  if (layout.target === "cli") {
+    const env = { ...process.env, OCTOPUS_CLI_RUNTIME_DIR: layout.staging };
+    const command = [process.execPath, path.join(__dirname, "build-cli.cjs"), "--runtime", `--output=${layout.staging}`];
+    if (dryRun) return { applied: false, target: "cli", command, bundle: layout.staging };
+    const before = liveIdentity();
+    const result = spawnSync(command[0], command.slice(1), { cwd: repoRoot, env, stdio: ["ignore", 2, 2] });
+    if (result.status !== 0) throw new Error(`CLI packaging failed with status ${result.status}; ${layout.live} was not touched`);
+    if (liveIdentity() !== before) throw new Error(`${layout.live} changed during the staging build`);
+    return { applied: true, target: "cli", bundle: layout.staging, build: buildInfo(layout.staging), live_untouched: true };
+  }
   const { node } = JSON.parse(fs.readFileSync(path.join(appRoot, "native", "runtime.json"), "utf8"));
   const env = { ...process.env, OCTOPUS_PACKAGE_BUNDLE: layout.staging,
     OCTOPUS_NATIVE_NODE_HEADERS: process.env.OCTOPUS_NATIVE_NODE_HEADERS || path.join(layout.buildRoot, `node-v${node}`, "include", "node") };
   const command = [process.execPath, path.join(__dirname, "package-macos.cjs")];
   if (dryRun) return { applied: false, command, bundle: layout.staging };
-  const identity = () => {
-    const stat = fs.statSync(path.join(installation(layout.live), "build-info.json"), { throwIfNoEntry: false });
-    return stat ? `${stat.ino}:${stat.mtimeMs}` : null;
-  };
-  const before = identity();
+  const before = liveIdentity();
   const result = spawnSync(command[0], command.slice(1), { cwd: repoRoot, env, stdio: ["ignore", 2, 2] });
   if (result.status !== 0) throw new Error(`packaging failed with status ${result.status}; ${layout.live} was not touched`);
-  if (identity() !== before) throw new Error(`${layout.live} changed during the staging build`);
+  if (liveIdentity() !== before) throw new Error(`${layout.live} changed during the staging build`);
   return { applied: true, bundle: layout.staging, build: buildInfo(layout.staging), live_untouched: true };
 }
 
 function packageRoots(bundle, home) {
   const root = installation(bundle), sourceRegistryRoot = path.join(root, "local-packages", "registry");
-  const { createPackageStoragePublisher } = require(path.join(root, "electron", "packageStorage.cjs"));
+  const { createPackageStoragePublisher } = requireElectronModule(bundle, "packageStorage.cjs");
   return { sourceRegistryRoot, activeRegistryRoot: path.join(home, "registry"), libraryRoot: path.join(root, "local-packages"),
     stateRoot: path.join(home, "client", "package-state"), publication: createPackageStoragePublisher(sourceRegistryRoot, root) };
 }
-const localPackages = (bundle) => require(path.join(installation(bundle), "electron", "localPackages.cjs"));
+const localPackages = (bundle) => requireElectronModule(bundle, "localPackages.cjs");
 const CHAT_CLIENT_PACKAGE = "world_operator_chat";
 
 function packageAction(entry) {
@@ -432,16 +579,60 @@ async function smokeTest(bundle, packageIds) {
   return rows;
 }
 
+function verifyCliReceiptBinaries(bundle, info) {
+  const root = installation(bundle);
+  const binary = runtimeBinary(bundle);
+  try {
+    const stat = fs.statSync(binary);
+    if (!stat.isFile()) return { ok: false, detail: `${binary} is not a regular file` };
+    fs.accessSync(binary, fs.constants.X_OK);
+  } catch (error) {
+    return { ok: false, detail: `runtime executable missing or not executable: ${binary} (${error.message})` };
+  }
+  if (!Array.isArray(info?.binaries) || info.binaries.length === 0) {
+    return { ok: true, detail: binary };
+  }
+  for (const entry of info.binaries) {
+    if (!nonempty(entry?.path) || !Number.isSafeInteger(entry?.bytes) || !/^[0-9a-f]{64}$/.test(entry?.sha256 ?? "")) {
+      return { ok: false, detail: `malformed binary receipt entry: ${JSON.stringify(entry)}` };
+    }
+    const candidate = path.resolve(root, entry.path);
+    const relative = path.relative(root, candidate);
+    if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+      return { ok: false, detail: `binary receipt path escapes bundle: ${entry.path}` };
+    }
+    let bytes;
+    try { bytes = fs.readFileSync(candidate); }
+    catch (error) { return { ok: false, detail: `missing receipt binary ${entry.path}: ${error.message}` }; }
+    if (bytes.length !== entry.bytes) {
+      return { ok: false, detail: `${entry.path} size ${bytes.length} differs from receipt ${entry.bytes}` };
+    }
+    const actual = crypto.createHash("sha256").update(bytes).digest("hex");
+    if (actual !== entry.sha256) {
+      return { ok: false, detail: `${entry.path} sha256 mismatch` };
+    }
+  }
+  return { ok: true, detail: `${info.binaries.length} receipt binaries verified` };
+}
+
 async function verifyStaging(layout, home, { smoke = true, allowModifiedSource = false, smokePackages = [CHAT_CLIENT_PACKAGE, "world_provider_codex"] } = {}) {
   const bundle = requireBundle(layout.staging), checks = [];
   const check = (name, ok, detail = "") => checks.push({ name, ok, detail });
-  if (process.platform === "darwin") {
+  if (process.platform === "darwin" && isMacBundle(bundle)) {
     const signed = spawnSync("codesign", ["--verify", "--deep", "--strict", bundle], { encoding: "utf8" });
     check("codesign", signed.status === 0, lastLines(signed));
   }
-  const info = buildInfo(bundle), head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).stdout.trim();
-  check("revision", info.revision === head && (allowModifiedSource || info.modifiedSource === false),
-    `bundle ${info.revision}${info.modifiedSource ? " built from modified source" : ""}; HEAD ${head}`);
+  const info = buildInfo(bundle);
+  if (!isMacBundle(bundle)) {
+    const verified = verifyCliReceiptBinaries(bundle, info);
+    check("cli_binaries", verified.ok, verified.detail);
+  }
+  const gitHead = spawnSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" });
+  const head = gitHead.status === 0 ? gitHead.stdout.trim() : "";
+  if (isMacBundle(bundle) || (head && /^[0-9a-f]{40}$/.test(info.revision ?? ""))) {
+    check("revision", info.revision === head && (allowModifiedSource || info.modifiedSource === false),
+      `bundle ${info.revision}${info.modifiedSource ? " built from modified source" : ""}; HEAD ${head}`);
+  }
   if (fs.existsSync(path.join(home, "registry"))) {
     const doctor = octopus(bundle, home, ["doctor"]);
     check("doctor_home", doctor.status === 0, lastLines(doctor));
@@ -451,14 +642,56 @@ async function verifyStaging(layout, home, { smoke = true, allowModifiedSource =
 }
 
 const turnIdentity = (turn) => JSON.stringify([turn.run_id, turn.source, turn.opened_movement_seq]);
+const SYSTEMD_UNIT_PATTERN = /^[A-Za-z0-9@._:-]+$/;
+
+function validateSystemdUnit(unit) {
+  if (unit == null) return null;
+  if (typeof unit !== "string" || !SYSTEMD_UNIT_PATTERN.test(unit) || unit.startsWith("-")) {
+    throw Object.assign(new Error(`invalid --systemd-unit '${unit}'`), { usage: true });
+  }
+  return unit;
+}
+
+function validateSystemdScope(scope) {
+  if (scope == null || scope === "system") return "system";
+  if (scope === "user") return "user";
+  throw Object.assign(new Error(`invalid --systemd-scope '${scope}'; expected system or user`), { usage: true });
+}
+
+function validateRestartMode(mode) {
+  if (mode == null || mode === "socket") return "socket";
+  if (mode === "systemd") return "systemd";
+  throw Object.assign(new Error(`invalid --restart-mode '${mode}'; expected socket or systemd`), { usage: true });
+}
+
+function defaultRunSystemctl(unit, scope = "system") {
+  const args = [...(scope === "user" ? ["--user"] : []), "restart", unit];
+  const result = spawnSync("systemctl", args, { encoding: "utf8" });
+  if (result.error) return { ok: false, error: result.error.message };
+  if (result.status !== 0) return { ok: false, error: lastLines(result) || `systemctl exited with ${result.status}` };
+  return { ok: true };
+}
 
 async function restartRuntime(layout, home, options = {}) {
   const { callerRun = null, allowInFlightRuns = [], dryRun = false, force = false, swap = false, rollback = true,
-    timeoutMs = 300_000, readTurns = readTurnsInFlight } = options;
+    timeoutMs = 300_000, readTurns = readTurnsInFlight,
+    systemdUnit: rawUnit = null, systemdScope: rawScope = "system", restartMode: rawMode = "socket",
+    runSystemctl = defaultRunSystemctl } = options;
+  const systemdUnit = validateSystemdUnit(rawUnit);
+  const systemdScope = validateSystemdScope(rawScope);
+  const restartMode = validateRestartMode(rawMode);
+  if (restartMode === "systemd" && !systemdUnit) {
+    throw Object.assign(new Error("--restart-mode=systemd requires --systemd-unit=<unit>"), { usage: true });
+  }
   const before = await control(home, "status");
   if (before?.outcome !== "status") throw new Error(`no runtime answers for Home ${home} (${before?.error}); only a running runtime is restarted`);
   if (swap) requireBundle(layout.staging);
-  const plan = [...(swap ? swapBundles(layout, { dryRun: true }).plan : []), "restart through the control socket", "wait for a ready successor",
+  const restartStep = restartMode === "systemd"
+    ? `restart through systemd (${systemdScope} unit ${systemdUnit})`
+    : systemdUnit
+      ? `restart through the control socket (fallback: systemd ${systemdScope} unit ${systemdUnit})`
+      : "restart through the control socket";
+  const plan = [...(swap ? swapBundles(layout, { dryRun: true }).plan : []), restartStep, "wait for a ready successor",
     rollback ? `on failure: restore ${layout.prev} and restart again` : "on failure: report only"];
   const refuse = (refused, extra = {}) => ({ ok: false, applied: false, refused, plan, ...extra });
   const usable = (status) => status?.outcome === "status" && status.phase === "ready" && status.stopping === null
@@ -503,21 +736,47 @@ async function restartRuntime(layout, home, options = {}) {
   if (swap) swapBundles(layout);
   const healthy = (status) => status?.outcome === "status" && status.phase === "ready" && status.stopping === null
     && Array.isArray(status.interface_failures) && newInterfaceFailures(before, status).length === 0;
-  await control(home, "restart");
+  const triggerRestart = async () => {
+    if (restartMode === "systemd") {
+      const outcome = await runSystemctl(systemdUnit, systemdScope);
+      return { method: "systemd", ok: outcome?.ok !== false, error: outcome?.error ?? null };
+    }
+    const answer = await control(home, "restart");
+    if (answer?.outcome === "status") return { method: "socket", ok: true, error: null };
+    if (systemdUnit) {
+      const outcome = await runSystemctl(systemdUnit, systemdScope);
+      return { method: "systemd_fallback", ok: outcome?.ok !== false, socket_error: answer?.error ?? "unreachable", error: outcome?.error ?? null };
+    }
+    return { method: "socket", ok: false, error: answer?.error ?? "unreachable" };
+  };
+  const initialRestart = await triggerRestart();
   const first = await waitForStatus(home, (status) => healthy(status) && status.started_at_unix_ms !== before.started_at_unix_ms, timeoutMs);
-  if (first.ok) return { ok: true, applied: true, swapped: swap, previous: before, runtime: first.status, revision: buildInfo(layout.live)?.revision ?? null };
+  if (first.ok) {
+    return { ok: true, applied: true, swapped: swap, restart_method: initialRestart.method, previous: before,
+      runtime: first.status, revision: buildInfo(layout.live)?.revision ?? null };
+  }
   const regressed = newInterfaceFailures(before, first.status);
-  if (!rollback || !fs.existsSync(layout.prev)) return { ok: false, applied: true, swapped: swap, rolled_back: false, new_interface_failures: regressed, runtime: first.status };
+  if (!rollback || !pathExists(layout.prev)) {
+    return { ok: false, applied: true, swapped: swap, restart_method: initialRestart.method, rolled_back: false,
+      new_interface_failures: regressed, runtime: first.status };
+  }
   rollbackBundles(layout);
   const current = await control(home, "status");
-  if (current?.outcome !== "status") {
-    return { ok: false, applied: true, swapped: swap, rolled_back: true, recovered: false, new_interface_failures: regressed, failed: first.status,
+  let rollbackRestart;
+  if (current?.outcome === "status") {
+    rollbackRestart = await triggerRestart();
+  } else if (systemdUnit) {
+    const outcome = await runSystemctl(systemdUnit, systemdScope);
+    rollbackRestart = { method: "systemd_fallback", ok: outcome?.ok !== false, error: outcome?.error ?? null };
+  } else {
+    return { ok: false, applied: true, swapped: swap, restart_method: initialRestart.method, rolled_back: true, recovered: false,
+      new_interface_failures: regressed, failed: first.status,
       error: `no runtime answers for Home ${home} after the rollback; start it from ${layout.live}` };
   }
-  await control(home, "restart");
   const second = await waitForStatus(home, (status) => healthy(status) && status.started_at_unix_ms !== before.started_at_unix_ms
-    && status.started_at_unix_ms !== current.started_at_unix_ms, timeoutMs);
-  return { ok: false, applied: true, swapped: swap, rolled_back: true, recovered: second.ok, new_interface_failures: regressed, failed: first.status, runtime: second.status };
+    && (current?.outcome !== "status" || status.started_at_unix_ms !== current.started_at_unix_ms), timeoutMs);
+  return { ok: false, applied: true, swapped: swap, restart_method: initialRestart.method, rollback_restart_method: rollbackRestart.method,
+    rolled_back: true, recovered: second.ok, new_interface_failures: regressed, failed: first.status, runtime: second.status };
 }
 
 async function status(layout, home) {
@@ -528,20 +787,21 @@ async function status(layout, home) {
     turns = (await readTurnsInFlight(layout.live, home, { sinceUnixMs: runtime.outcome === "status" ? runtime.started_at_unix_ms : 0 }))
       .filter((turn) => turn.turn_open);
   } catch (error) { turns = { error: error.message }; }
-  return { home, head: spawnSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).stdout.trim(), runtime,
+  return { target: layout.target, home, head: spawnSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).stdout.trim(), runtime,
     bundles: { live: describe(layout.live), staging: describe(layout.staging), prev: describe(layout.prev) }, turns_in_flight: turns };
 }
 
 const USAGE = `Usage: node app/scripts/safe-self-update.cjs <command> [options]
   status                          live runtime, bundle revisions, turns in flight (every run)
-  build [--dry-run]               package into app/build/Octopus.staging.app
+  build [--dry-run]               package into staging bundle (Octopus.staging.app or cli/runtime.staging)
   verify [--no-smoke] [--allow-modified-source]
   packages status | packages sync [--dry-run] [--with-chat-client] [--only=a,b]
-  swap [--dry-run]                Octopus.app -> Octopus.prev.app, staging -> Octopus.app
+  swap [--dry-run]                live -> prev, staging -> live (directory rename or atomic symlink swap)
   restart [--swap] [--caller-run=<run id>] [--allow-in-flight-run <run id>]... [--dry-run] [--force] [--no-rollback] [--detach --log=<file>]
+          [--systemd-unit=<unit>] [--systemd-scope=system|user] [--restart-mode=socket|systemd]
                                   refuses on untrusted turn evidence, a changing frontier, or a blocking turn
-  rollback [--dry-run]            Octopus.prev.app -> Octopus.app
-Common: --home=<Octopus Home, default $OCTOPUS_HOME or ~/.octopus> --build-root=<dir>`;
+  rollback [--dry-run]            prev -> live (directory rename or atomic symlink swap)
+Common: --target=<mac|cli|auto, default mac on darwin / cli on linux> --home=<Octopus Home, default $OCTOPUS_HOME or ~/.octopus> --build-root=<dir>`;
 
 const REPEATABLE_VALUE_OPTIONS = new Set(["allow-in-flight-run"]);
 
@@ -565,7 +825,8 @@ function parseArgs(argv) {
 
 async function main(argv) {
   const { positional, options } = parseArgs(argv);
-  const layout = bundles(options.buildRoot ? path.resolve(options.buildRoot) : undefined);
+  const target = resolveTarget(typeof options.target === "string" ? options.target : "auto");
+  const layout = bundles(options.buildRoot ? path.resolve(options.buildRoot) : undefined, { target });
   const home = path.resolve(options.home || process.env.OCTOPUS_HOME || path.join(os.homedir(), ".octopus"));
   const dryRun = options.dryRun === true, [command, sub] = positional;
   if (command === "status") return status(layout, home);
@@ -587,13 +848,17 @@ async function main(argv) {
     }
     return restartRuntime(layout, home, { callerRun: typeof options.callerRun === "string" ? options.callerRun : null, dryRun,
       allowInFlightRuns: Array.isArray(options.allowInFlightRun) ? options.allowInFlightRun : [],
-      force: options.force === true, swap: options.swap === true, rollback: options.noRollback !== true });
+      force: options.force === true, swap: options.swap === true, rollback: options.noRollback !== true,
+      systemdUnit: typeof options.systemdUnit === "string" ? options.systemdUnit : null,
+      systemdScope: typeof options.systemdScope === "string" ? options.systemdScope : "system",
+      restartMode: typeof options.restartMode === "string" ? options.restartMode : "socket" });
   }
   throw Object.assign(new Error(USAGE), { usage: true });
 }
 
-module.exports = { bundles, buildInfo, swapBundles, rollbackBundles, control, isReady, readChatTurns, readLedgerTurns, readTurnsInFlight, blockingTurns,
-  newInterfaceFailures, packageAction, restartRuntime, parseArgs, main };
+module.exports = { defaultTarget, resolveTarget, bundles, isMacBundle, installation, runtimeBinary, buildInfo, swapBundles, rollbackBundles, control, isReady,
+  readChatTurns, readLedgerTurns, readTurnsInFlight, blockingTurns, newInterfaceFailures, packageAction, buildStaging, verifyStaging, validateSystemdUnit,
+  restartRuntime, parseArgs, main };
 
 if (require.main === module) {
   main(process.argv.slice(2)).then((result) => {

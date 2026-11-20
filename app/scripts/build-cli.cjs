@@ -3,10 +3,11 @@ const fs = require("node:fs/promises");
 const { build } = require("esbuild");
 const { spawnSync } = require("node:child_process");
 const { SUPPORTED_TARGETS, resolveCliTarget, takeTargetArgument } = require("./cli-target.cjs");
+const { packageCliRuntime, resolveCliOutputRoot, takeOutputArgument } = require("./package-cli.cjs");
 
-const USAGE = `Usage: node app/scripts/build-cli.cjs [--runtime] [--target=<${SUPPORTED_TARGETS.join("|")}>]`;
+const USAGE = `Usage: node app/scripts/build-cli.cjs [--runtime] [--target=<${SUPPORTED_TARGETS.join("|")}>] [--output=<directory>]`;
 
-async function buildCli({ runtime = false, target = null } = {}) {
+async function buildCli({ runtime = false, target = null, outputRoot = null } = {}) {
   const cli = resolveCliTarget({ target });
   const appRoot = path.resolve(__dirname, "..");
   const outdir = path.join(appRoot, "build", "cli");
@@ -26,7 +27,8 @@ async function buildCli({ runtime = false, target = null } = {}) {
   if (runtime) {
     const repoRoot = path.dirname(appRoot);
     const registry = path.join(repoRoot, "registry");
-    const packager = require("./runtime-package.cjs").createRuntimePackager({ repoRoot, appRoot, outputRoot: path.join(outdir, "runtime") });
+    const resolvedOutputRoot = resolveCliOutputRoot(appRoot, outputRoot);
+    const packager = require("./runtime-package.cjs").createRuntimePackager({ repoRoot, appRoot, outputRoot: resolvedOutputRoot });
     const provider = path.join(registry, "interface/world_provider_codex/packages/octopus-provider-codex");
     const bridge = path.join(provider, "opencodex-bridge");
     run("npm", ["ci"], bridge);
@@ -40,7 +42,7 @@ async function buildCli({ runtime = false, target = null } = {}) {
     packager.materializeProviderLife(provider, "octopus-provider-opencodex-life");
     packager.materializeProviderLife(path.join(provider, "intake"), "octopus-input-intake-life");
     packager.validateOpenCodexOwnerAssets(provider);
-    require("./package-cli.cjs").packageCliRuntime({ appRoot, target: cli.triple });
+    packageCliRuntime({ appRoot, target: cli.triple, outputRoot: resolvedOutputRoot });
   }
   return outdir;
 }
@@ -52,9 +54,10 @@ function run(command, args, cwd) {
 }
 
 if (require.main === module) Promise.resolve().then(() => {
-  const { target, rest } = takeTargetArgument(process.argv.slice(2));
+  const targetParsed = takeTargetArgument(process.argv.slice(2));
+  const { outputRoot, rest } = takeOutputArgument(targetParsed.rest);
   if (rest.some((arg) => arg !== "--runtime")) throw new Error(USAGE);
-  return buildCli({ runtime: rest.includes("--runtime"), target });
+  return buildCli({ runtime: rest.includes("--runtime"), target: targetParsed.target, outputRoot });
 }).then((directory) => {
   process.stdout.write(`Octopus CLI client modules built in ${directory}\n`);
   require("./build-space-notice.cjs").printBuildSpaceNotice();
