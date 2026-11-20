@@ -869,6 +869,8 @@ pub fn interfaces_mentioned_in_live_runs(
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SpawnLifeConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub private_environment_root_slot: Option<String>,
     pub processes: Vec<SpawnLifeCommand>,
 }
 
@@ -1244,6 +1246,37 @@ pub(crate) fn interface_private_environment_source_fingerprint(
     })?;
     append_fingerprint_part(&mut material, "state", b"present");
     append_fingerprint_part(&mut material, "content", &bytes);
+    Ok(ContentHash::of_bytes(&material))
+}
+
+pub(crate) fn interface_private_environment_source_fingerprint_with_owner(
+    var_dir: &Path,
+    interface: &str,
+    root_slots: &BTreeMap<String, PathBuf>,
+    owner_slot: Option<&str>,
+) -> Result<ContentHash, String> {
+    let own = interface_private_environment_source_fingerprint(var_dir)?;
+    let Some((owner_dir, owner_interface)) =
+        resolve_private_environment_owner_dir(var_dir, interface, root_slots, owner_slot)?
+    else {
+        return Ok(own);
+    };
+    if owner_interface == interface {
+        return Ok(own);
+    }
+    let owner = interface_private_environment_source_fingerprint(&owner_dir)?;
+    let mut material = Vec::new();
+    append_fingerprint_part(&mut material, "own-private-environment", own.to_hex().as_bytes());
+    append_fingerprint_part(
+        &mut material,
+        "owner-private-environment-slot",
+        owner_slot.unwrap_or_default().as_bytes(),
+    );
+    append_fingerprint_part(
+        &mut material,
+        "owner-private-environment",
+        owner.to_hex().as_bytes(),
+    );
     Ok(ContentHash::of_bytes(&material))
 }
 
@@ -1892,6 +1925,15 @@ fn append_imported_life_dependency_fingerprints(
 fn parse_spawn_life_config(path: &Path, bytes: &[u8]) -> Result<SpawnLifeConfig, String> {
     let config: SpawnLifeConfig = serde_json::from_slice(bytes)
         .map_err(|e| format!("life sidecar '{}' is malformed: {e}", path.display()))?;
+    if let Some(slot) = &config.private_environment_root_slot {
+        if slot.is_empty() || slot.trim() != slot || slot.contains('\0') {
+            return Err(format!(
+                "life sidecar '{}' contains invalid private_environment_root_slot {:?}",
+                path.display(),
+                slot
+            ));
+        }
+    }
     if config.processes.is_empty() {
         return Err(format!(
             "life sidecar '{}' declares no processes",
@@ -2397,8 +2439,125 @@ fn validate_private_environment_directory_metadata(
 fn read_interface_private_environment(
     ctx: &InterfaceLiftContext,
     declared_names: &BTreeSet<String>,
+    owner_slot: Option<&str>,
 ) -> Result<BTreeMap<String, String>, String> {
-    read_private_environment_document(&ctx.interface_var_dir(), ctx.interface.as_str(), declared_names)
+    let var_dir = ctx.interface_var_dir();
+    let mut values =
+        read_private_environment_document(&var_dir, ctx.interface.as_str(), declared_names)?;
+    let Some((owner_dir, owner_interface)) = resolve_private_environment_owner_dir(
+        &var_dir,
+        ctx.interface.as_str(),
+        &ctx.root_slots,
+        owner_slot,
+    )?
+    else {
+        return Ok(values);
+    };
+    if owner_interface == ctx.interface.as_str() {
+        return Ok(values);
+    }
+    let owner_values =
+        read_private_environment_document(&owner_dir, &owner_interface, declared_names)?;
+    let slot = owner_slot.unwrap_or_default();
+    for (name, owner_value) in owner_values {
+        match values.get(&name) {
+            Some(own_value) if own_value != &owner_value => {
+                return Err(format!(
+                    "interface '{}' environment name '{}' differs between interface and private environment root slot '{}'",
+                    ctx.interface.as_str(),
+                    name,
+                    slot
+                ));
+            }
+            Some(_) => {}
+            None => {
+                values.insert(name, owner_value);
+            }
+        }
+    }
+    Ok(values)
+}
+
+pub(crate) fn resolve_private_environment_owner_dir(
+    var_dir: &Path,
+    interface: &str,
+    root_slots: &BTreeMap<String, PathBuf>,
+    owner_slot: Option<&str>,
+) -> Result<Option<(PathBuf, String)>, String> {
+    let Some(slot) = owner_slot else {
+        return Ok(None);
+    };
+    let owner_dir = root_slots.get(slot).ok_or_else(|| {
+        format!(
+            "interface '{}' private_environment_root_slot '{}' is unbound",
+            interface, slot
+        )
+    })?;
+    if !owner_dir.is_absolute() {
+        return Err(format!(
+            "interface '{}' private_environment_root_slot '{}' is not absolute: {}",
+            interface,
+            slot,
+            owner_dir.display()
+        ));
+    }
+    let owner_interface = owner_dir
+        .file_name()
+        .and_then(|name| name.to_str())
+        .filter(|name| !name.is_empty() && name.trim() == *name && !name.contains('/'))
+        .ok_or_else(|| {
+            format!(
+                "interface '{}' private_environment_root_slot '{}' path '{}' has no valid interface directory name",
+                interface,
+                slot,
+                owner_dir.display()
+            )
+        })?
+        .to_string();
+    let interfaces_root = var_dir.parent().ok_or_else(|| {
+        format!(
+            "interface '{}' private directory '{}' has no parent",
+            interface,
+            var_dir.display()
+        )
+    })?;
+    let owner_parent = owner_dir.parent().ok_or_else(|| {
+        format!(
+            "interface '{}' private_environment_root_slot '{}' path '{}' has no parent",
+            interface,
+            slot,
+            owner_dir.display()
+        )
+    })?;
+    let same_home = if interfaces_root.exists() && owner_parent.exists() {
+        let interfaces_root = std::fs::canonicalize(interfaces_root).map_err(|error| {
+            format!(
+                "interface '{}' private root '{}' cannot be canonicalized: {error}",
+                interface,
+                interfaces_root.display()
+            )
+        })?;
+        let owner_parent = std::fs::canonicalize(owner_parent).map_err(|error| {
+            format!(
+                "interface '{}' private_environment_root_slot '{}' parent '{}' cannot be canonicalized: {error}",
+                interface,
+                slot,
+                owner_parent.display()
+            )
+        })?;
+        interfaces_root == owner_parent
+    } else {
+        interfaces_root == owner_parent
+    };
+    if !same_home {
+        return Err(format!(
+            "interface '{}' private_environment_root_slot '{}' path '{}' is outside the selected Home interfaces directory",
+            interface,
+            slot,
+            owner_dir.display()
+        ));
+    }
+    Ok(Some((owner_dir.clone(), owner_interface)))
 }
 
 pub fn read_private_environment_document(
@@ -2700,6 +2859,7 @@ pub fn spawn_process_life(
         let private_environment = Arc::new(read_interface_private_environment(
             &ctx,
             &declared_private_environment_names,
+            config.private_environment_root_slot.as_deref(),
         )?);
         let missing = config
             .processes
@@ -4726,6 +4886,7 @@ mod tests {
         let single = spawn_process_life(
             ctx(root.path(), "world_required_env_single"),
             SpawnLifeConfig {
+                private_environment_root_slot: None,
                 processes: vec![missing.clone()],
             },
         )
@@ -4735,6 +4896,7 @@ mod tests {
         let multi = spawn_process_life(
             ctx(root.path(), "world_required_env_multi"),
             SpawnLifeConfig {
+                private_environment_root_slot: None,
                 processes: vec![available, missing],
             },
         )
@@ -5477,5 +5639,186 @@ mod tests {
             )
             .unwrap_err();
         assert!(error.contains("REQUIRED_READ_ROOT"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn cloned_interface_resolves_private_env_and_read_env_paths_from_owner_root_slot() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let root = tempfile::tempdir().unwrap();
+        let interfaces_root = root.path().join("interfaces");
+        let owner_dir = interfaces_root.join("world_provider_vertex");
+        let clone_dir = interfaces_root.join("world_provider_vertex_clone");
+        std::fs::create_dir_all(&owner_dir).unwrap();
+        std::fs::create_dir_all(&clone_dir).unwrap();
+        std::fs::set_permissions(&owner_dir, std::fs::Permissions::from_mode(0o700)).unwrap();
+        std::fs::set_permissions(&clone_dir, std::fs::Permissions::from_mode(0o700)).unwrap();
+
+        let credentials_file = root.path().join("vertex-sa.json");
+        std::fs::write(&credentials_file, r#"{"type":"service_account"}"#).unwrap();
+        let credentials_path = credentials_file.to_string_lossy().into_owned();
+
+        let owner_env_path = owner_dir.join("environment.json");
+        std::fs::write(
+            &owner_env_path,
+            serde_json::to_vec(&serde_json::json!({
+                "schema_version": 1,
+                "interface": "world_provider_vertex",
+                "values": {
+                    "OCTOPUS_PROVIDER_VERTEX_PROJECT": "demo-project",
+                    "OCTOPUS_PROVIDER_VERTEX_CREDENTIALS_FILE": credentials_path
+                }
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        std::fs::set_permissions(&owner_env_path, std::fs::Permissions::from_mode(0o600)).unwrap();
+
+        let declared = BTreeSet::from([
+            "OCTOPUS_PROVIDER_VERTEX_PROJECT".to_string(),
+            "OCTOPUS_PROVIDER_VERTEX_CREDENTIALS_FILE".to_string(),
+        ]);
+        let (arrivals, _) = tokio::sync::mpsc::channel(1);
+        let mut ctx = InterfaceLiftContext::unprivileged(
+            InterfaceId::new("world_provider_vertex_clone"),
+            root.path().join("registry/interface/world_provider_vertex_clone"),
+            None,
+            clone_dir.clone(),
+            root.path().join("ledger/movements.jsonl"),
+            root.path().join("ledger/blobs"),
+            root.path().join("ledger/index.sqlite"),
+            BTreeMap::from([(
+                "provider_secret_owner_root".to_string(),
+                owner_dir.clone(),
+            )]),
+            arrivals,
+            Default::default(),
+        );
+
+        let resolved_env = read_interface_private_environment(
+            &ctx,
+            &declared,
+            Some("provider_secret_owner_root"),
+        )
+        .expect("clone resolves private environment from credential owner");
+        assert_eq!(
+            resolved_env.get("OCTOPUS_PROVIDER_VERTEX_PROJECT").map(String::as_str),
+            Some("demo-project")
+        );
+        assert_eq!(
+            resolved_env
+                .get("OCTOPUS_PROVIDER_VERTEX_CREDENTIALS_FILE")
+                .map(String::as_str),
+            Some(credentials_path.as_str())
+        );
+
+        let os_env: BTreeMap<String, std::ffi::OsString> = resolved_env
+            .iter()
+            .map(|(k, v)| (k.clone(), std::ffi::OsString::from(v)))
+            .collect();
+        let authority = ProcessAuthoritySpec {
+            read_env_paths: BTreeSet::from(["OCTOPUS_PROVIDER_VERTEX_CREDENTIALS_FILE".to_string()]),
+            ..ProcessAuthoritySpec::default()
+        };
+        authority
+            .resolve(
+                root.path(),
+                &ctx.root_slots,
+                &os_env,
+                std::iter::empty::<PathBuf>(),
+                std::iter::empty::<PathBuf>(),
+                std::iter::empty::<PathBuf>(),
+                std::iter::empty::<PathBuf>(),
+            )
+            .expect("read_env_paths resolves using owner private environment");
+        assert!(authority
+            .resolve(
+                root.path(),
+                &ctx.root_slots,
+                &BTreeMap::new(),
+                std::iter::empty::<PathBuf>(),
+                std::iter::empty::<PathBuf>(),
+                std::iter::empty::<PathBuf>(),
+                std::iter::empty::<PathBuf>(),
+            )
+            .unwrap_err()
+            .contains("OCTOPUS_PROVIDER_VERTEX_CREDENTIALS_FILE"));
+
+        let fp_before = interface_private_environment_source_fingerprint_with_owner(
+            &clone_dir,
+            "world_provider_vertex_clone",
+            &ctx.root_slots,
+            Some("provider_secret_owner_root"),
+        )
+        .unwrap();
+        std::fs::write(
+            &owner_env_path,
+            serde_json::to_vec(&serde_json::json!({
+                "schema_version": 1,
+                "interface": "world_provider_vertex",
+                "values": {
+                    "OCTOPUS_PROVIDER_VERTEX_PROJECT": "demo-project-updated",
+                    "OCTOPUS_PROVIDER_VERTEX_CREDENTIALS_FILE": credentials_path
+                }
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let fp_after = interface_private_environment_source_fingerprint_with_owner(
+            &clone_dir,
+            "world_provider_vertex_clone",
+            &ctx.root_slots,
+            Some("provider_secret_owner_root"),
+        )
+        .unwrap();
+        assert_ne!(fp_before, fp_after);
+
+        // Conflicting clone-local environment value fails closed.
+        let clone_env_path = clone_dir.join("environment.json");
+        std::fs::write(
+            &clone_env_path,
+            serde_json::to_vec(&serde_json::json!({
+                "schema_version": 1,
+                "interface": "world_provider_vertex_clone",
+                "values": {
+                    "OCTOPUS_PROVIDER_VERTEX_PROJECT": "conflicting-project"
+                }
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        std::fs::set_permissions(&clone_env_path, std::fs::Permissions::from_mode(0o600)).unwrap();
+        assert!(read_interface_private_environment(
+            &ctx,
+            &declared,
+            Some("provider_secret_owner_root"),
+        )
+        .unwrap_err()
+        .contains("differs between interface and private environment root slot"));
+        std::fs::remove_file(&clone_env_path).unwrap();
+
+        // Owner root outside the selected Home interfaces directory fails closed.
+        let outside = root.path().join("other/interfaces/world_provider_vertex");
+        std::fs::create_dir_all(&outside).unwrap();
+        ctx.root_slots
+            .insert("provider_secret_owner_root".to_string(), outside);
+        assert!(read_interface_private_environment(
+            &ctx,
+            &declared,
+            Some("provider_secret_owner_root"),
+        )
+        .unwrap_err()
+        .contains("outside the selected Home interfaces directory"));
+
+        // Unbound owner root slot fails closed.
+        ctx.root_slots.clear();
+        assert!(read_interface_private_environment(
+            &ctx,
+            &declared,
+            Some("provider_secret_owner_root"),
+        )
+        .unwrap_err()
+        .contains("is unbound"));
     }
 }
