@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent-Web Observatory &amp; Verification API — Octopus OS</title>
+  <meta name="description" content="Live empirical Agent-Web Observatory and public verification API from Octopus OS: 36 domains, 324 passive HTTPS probes, naive HTTP-200 false-positive measurements, and Rust MCP identity-guard benchmarks.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark" aria-hidden="true">O</span>
+        <span>octopus-os</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="index.html#architecture">Architecture</a>
+        <a href="observatory.html" aria-current="page">Observatory</a>
+        <a href="index.html#tools">Standalone Tools</a>
+        <a href="index.html#log">Engineering Log</a>
+        <a href="index.html#stewardship">Stewardship &amp; Funding</a>
+        <a href="https://github.com/octopus-sios/octopus-os">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="hero">
+      <div class="breadcrumb"><a href="index.html">Home</a> / Agent-Web Observatory</div>
+      <div class="eyebrow">Live Verification API · Snapshot 2026-11-20 · Zero Trackers</div>
+      <h1>Empirical Agent-Web Observatory &amp; Verification API.</h1>
+      <p class="lead">
+        Passive, reproducible measurements of agent discovery artifacts (<code>/llms.txt</code>,
+        <code>/llms-full.txt</code>, <code>/agents.md</code>, <code>/.well-known/mcp*</code>,
+        <code>/robots.txt</code>) alongside Rust MCP stdio security benchmarks, backed by a live
+        public verification API on Cloudflare Workers.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#live-lookup">Run live domain check</a>
+        <a class="btn" href="https://octopus-radar-api.octopus-sios.workers.dev/openapi.json">OpenAPI 3.1 spec</a>
+        <a class="btn" href="https://octopus-radar-api.octopus-sios.workers.dev/.well-known/x402.json">x402 metadata</a>
+        <a class="btn" href="https://octopus-radar-api.octopus-sios.workers.dev/v1/dataset/latest">Latest JSON dataset</a>
+      </div>
+    </section>
+
+    <section id="summary">
+      <h2>2026-11-20 Empirical Snapshot</h2>
+      <p class="section-intro">
+        Collected on <code>2026-11-20T10:04:52Z</code> across 4 equal developer cohorts (9 domains
+        each, passive HTTPS GETs only, 64 KiB read cap, strict content validation).
+      </p>
+
+      <div class="stat-grid" aria-label="Headline empirical metrics">
+        <div class="stat-card">
+          <div class="stat-value">36</div>
+          <div class="stat-label">Domains scanned across 4 equal cohorts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">324</div>
+          <div class="stat-label">Passive HTTPS probes (8 paths + homepage headers)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">45.7 / 100</div>
+          <div class="stat-label">Mean readiness score (median 51 / 100)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">30.9%</div>
+          <div class="stat-label">Naive HTTP-200 false positives on core agent paths (17 / 55)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">8.3%</div>
+          <div class="stat-label">Domains with explicit AI crawler rules in <code>robots.txt</code> (3 / 36)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">2.060 ms</div>
+          <div class="stat-label">Rust <code>mcp-identity-guard</code> p50 paired stdio overhead</div>
+        </div>
+      </div>
+
+      <p class="caveat">
+        Scope boundary: dated purposive 36-domain developer sample and local synthetic security
+        fixtures—not a web-wide readiness census or third-party security certification.
+      </p>
+    </section>
+
+    <section id="live-lookup">
+      <h2>Live Agent-Readiness Lookup</h2>
+      <p class="section-intro">
+        Query the live verification API directly from your browser via
+        <code>GET https://octopus-radar-api.octopus-sios.workers.dev/v1/check/agent-ready</code>.
+        Passive HTTPS checks only; no cookies, no tracking, no accounts required.
+      </p>
+
+      <div class="card">
+        <form id="radar-form" class="lookup-form" action="https://octopus-radar-api.octopus-sios.workers.dev/v1/check/agent-ready" method="get">
+          <label class="skip-link" for="radar-domain">Domain to check</label>
+          <input
+            id="radar-domain"
+            name="domain"
+            class="lookup-input"
+            type="text"
+            value="cloudflare.com"
+            placeholder="e.g. cloudflare.com, turso.tech, github.com"
+            autocomplete="off"
+            spellcheck="false"
+            required
+          >
+          <button id="radar-submit" class="btn btn-primary" type="submit">Check domain</button>
+        </form>
+        <p id="radar-status" class="lookup-status" role="status" aria-live="polite">
+          Enter any public HTTPS domain to run a bounded live passive probe.
+        </p>
+        <div id="radar-result" class="lookup-result" hidden></div>
+      </div>
+
+      <pre><code>curl -s "https://octopus-radar-api.octopus-sios.workers.dev/v1/check/agent-ready?domain=cloudflare.com" | jq '{domain, score, grade, summary}'</code></pre>
+    </section>
+
+    <section id="paths">
+      <h2>Artifact Adoption &amp; Naive HTTP-200 False Positives</h2>
+      <p class="section-intro">
+        27 of 36 domains (75.0%) published at least one structurally verified agent discovery
+        artifact. Counting raw HTTP 200 status codes without validating media type and structure
+        misclassifies 17 of 55 core agent-path responses (30.9%), including 8 HTML/redirect
+        illusions and oversized truncated dumps.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th>Verified</th>
+            <th>Adoption</th>
+            <th>Naive 200</th>
+            <th>False Positives</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/robots.txt</code></td><td>32 / 36</td><td>88.9%</td><td>34</td><td>2</td><td>3 / 36 (8.3%) declare explicit AI crawler rules</td></tr>
+          <tr><td><code>/llms.txt</code></td><td>24 / 36</td><td>66.7%</td><td>28</td><td>4</td><td>1 HTML/redirect illusion, 3 truncated (&gt;64 KiB)</td></tr>
+          <tr><td><code>/agents.md</code></td><td>9 / 36</td><td>25.0%</td><td>10</td><td>1</td><td>1 HTML/redirect illusion</td></tr>
+          <tr><td><code>/llms-full.txt</code></td><td>4 / 36</td><td>11.1%</td><td>16</td><td>12</td><td>3 HTML/redirect illusions, 9 truncated (&gt;64 KiB)</td></tr>
+          <tr><td><code>/.well-known/mcp</code></td><td>3 / 36</td><td>8.3%</td><td>7</td><td>4</td><td>2 HTML/redirect illusions</td></tr>
+          <tr><td><code>/.well-known/mcp.json</code></td><td>2 / 36</td><td>5.6%</td><td>7</td><td>5</td><td>2 HTML/redirect illusions</td></tr>
+          <tr><td><code>/.well-known/agent.json</code></td><td>0 / 36</td><td>0.0%</td><td>3</td><td>3</td><td>2 HTML/redirect illusions</td></tr>
+          <tr><td><code>/.well-known/ai-plugin.json</code></td><td>0 / 36</td><td>0.0%</td><td>3</td><td>3</td><td>2 HTML/redirect illusions</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="cohorts">
+      <h2>Cohort Breakdown &amp; Top Observed Domains</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>By Cohort (9 domains each)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Cohort</th>
+                <th>Mean Score</th>
+                <th><code>/llms.txt</code></th>
+                <th>Any Artifact</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Cloud &amp; Infrastructure</td><td><strong>60.9</strong></td><td>9 / 9</td><td>9 / 9</td></tr>
+              <tr><td>DevTools &amp; Platforms</td><td><strong>54.4</strong></td><td>7 / 9</td><td>8 / 9</td></tr>
+              <tr><td>AI &amp; Agent Platforms</td><td><strong>35.7</strong></td><td>4 / 9</td><td>4 / 9</td></tr>
+              <tr><td>Developer Docs &amp; Frameworks</td><td><strong>31.7</strong></td><td>4 / 9</td><td>6 / 9</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>Highest-Scoring Domains (2026-11-20)</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Domain</th>
+                <th>Cohort</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>turso.tech</code></td><td>DevTools &amp; Platforms</td><td><strong>83</strong></td></tr>
+              <tr><td><code>neon.tech</code></td><td>Cloud &amp; Infrastructure</td><td><strong>77</strong></td></tr>
+              <tr><td><code>modelcontextprotocol.io</code></td><td>AI &amp; Agent Platforms</td><td><strong>75</strong></td></tr>
+              <tr><td><code>github.com</code></td><td>DevTools &amp; Platforms</td><td><strong>70</strong></td></tr>
+              <tr><td><code>render.com</code></td><td>Cloud &amp; Infrastructure</td><td><strong>70</strong></td></tr>
+              <tr><td><code>resend.com</code></td><td>DevTools &amp; Platforms</td><td><strong>65</strong></td></tr>
+              <tr><td><code>vercel.com</code></td><td>Cloud &amp; Infrastructure</td><td><strong>65</strong></td></tr>
+              <tr><td><code>fly.io</code></td><td>Cloud &amp; Infrastructure</td><td><strong>63</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="mcp-security">
+      <h2>MCP Identity &amp; Manifest Security Benchmarks</h2>
+      <p class="section-intro">
+        Measured live on 2026-11-20 against local synthetic fixtures using the MIT-licensed
+        <a href="https://github.com/octopus-sios/octopus-os/tree/main/examples/mcp-identity-guard"><code>examples/mcp-identity-guard</code></a>
+        Rust gateway and the Worker's static manifest verifier (<code>POST /v1/check/mcp-manifest</code>).
+      </p>
+
+      <div class="grid-2">
+        <article class="card">
+          <h3>Runtime Rust Gateway (<code>mcp-identity-guard</code> v0.2.0)</h3>
+          <div class="metric-row">
+            <span><strong>2.060 ms</strong> p50 paired overhead</span>
+            <span><strong>4.082 ms</strong> p99 overhead</span>
+          </div>
+          <p>
+            19/19 Rust security tests passing, 4/4 proxy attack mitigations blocked, and 0/200
+            benign false positives across paired direct (<code>68.3 µs</code> p50) vs guarded
+            (<code>2.139 ms</code> p50) stdio calls with hash-chained audit logging.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Static Manifest Guard (<code>POST /v1/check/mcp-manifest</code>)</h3>
+          <div class="metric-row">
+            <span><strong>6 / 6</strong> adversarial manifests flagged</span>
+            <span><strong>0 / 6</strong> benign false positives</span>
+          </div>
+          <p>
+            Flags hidden instruction tags, credential exfiltration prompts, cross-tool shadowing,
+            Unicode bidi/zero-width/tag smuggling, provider namespace spoofing, and unconstrained
+            exec/raw-secret schemas.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="api">
+      <h2>Public API Endpoints</h2>
+      <p class="section-intro">
+        Base URL: <a href="https://octopus-radar-api.octopus-sios.workers.dev"><code>https://octopus-radar-api.octopus-sios.workers.dev</code></a>
+        (CORS enabled, no authentication required for standard verification queries).
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Method</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><a href="https://octopus-radar-api.octopus-sios.workers.dev/health"><code>/health</code></a></td>
+            <td><code>GET</code></td>
+            <td>Service health, schema version, and snapshot metadata</td>
+          </tr>
+          <tr>
+            <td><a href="https://octopus-radar-api.octopus-sios.workers.dev/openapi.json"><code>/openapi.json</code></a></td>
+            <td><code>GET</code></td>
+            <td>OpenAPI 3.1 machine-readable specification</td>
+          </tr>
+          <tr>
+            <td><a href="https://octopus-radar-api.octopus-sios.workers.dev/.well-known/x402.json"><code>/.well-known/x402.json</code></a></td>
+            <td><code>GET</code></td>
+            <td>Machine-readable capability &amp; optional patronage metadata</td>
+          </tr>
+          <tr>
+            <td><a href="https://octopus-radar-api.octopus-sios.workers.dev/v1/dataset/latest"><code>/v1/dataset/latest</code></a></td>
+            <td><code>GET</code></td>
+            <td>Complete 2026-11-20 empirical observatory &amp; MCP security snapshot JSON</td>
+          </tr>
+          <tr>
+            <td><code>/v1/check/agent-ready?domain=&lt;host&gt;</code></td>
+            <td><code>GET</code></td>
+            <td>Live bounded passive probe &amp; structural verification for a public HTTPS domain</td>
+          </tr>
+          <tr>
+            <td><code>/v1/check/mcp-manifest</code></td>
+            <td><code>POST</code></td>
+            <td>Static security audit of an MCP <code>tools/list</code> JSON manifest</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <div class="footer-links">
+      <a href="index.html">Overview</a>
+      <a href="https://github.com/octopus-sios/octopus-os">Repository</a>
+      <a href="https://octopus-radar-api.octopus-sios.workers.dev/openapi.json">OpenAPI Spec</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/ORIGIN.md">Origin</a>
+      <a href="https://github.com/octopus-sios/octopus-os/blob/main/FUNDING.md">Funding</a>
+    </div>
+    <p>Zero analytics, zero cookies, zero external scripts or CDNs. Optional browser lookup queries the Octopus verification Worker directly.</p>
+  </footer>
+
+  <script>
+    (function () {
+      const API_BASE = "https://octopus-radar-api.octopus-sios.workers.dev";
+      const form = document.getElementById("radar-form");
+      const input = document.getElementById("radar-domain");
+      const button = document.getElementById("radar-submit");
+      const statusEl = document.getElementById("radar-status");
+      const resultEl = document.getElementById("radar-result");
+
+      function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined && text !== null) node.textContent = String(text);
+        return node;
+      }
+
+      function renderResult(data) {
+        resultEl.replaceChildren();
+        const header = el("div", "metric-row");
+        header.appendChild(el("span", "", "Domain: " + (data.domain || "")));
+        header.appendChild(el("span", "", "Score: " + data.score + " / 100 (" + (data.grade || "-") + ")"));
+        if (data.summary) {
+          header.appendChild(
+            el("span", "", "Verified artifacts: " + (data.summary.verified_artifacts || []).length)
+          );
+          header.appendChild(
+            el("span", "", "Naive-200 illusions: " + (data.summary.naive_200_illusions || 0))
+          );
+        }
+        resultEl.appendChild(header);
+
+        if (Array.isArray(data.probes) && data.probes.length > 0) {
+          const table = el("table");
+          const thead = el("thead");
+          const hr = el("tr");
+          ["Path", "HTTP", "Classification", "Verified", "Latency"].forEach(function (h) {
+            hr.appendChild(el("th", "", h));
+          });
+          thead.appendChild(hr);
+          table.appendChild(thead);
+
+          const tbody = el("tbody");
+          data.probes.forEach(function (probe) {
+            const tr = el("tr");
+            const pathTd = el("td");
+            pathTd.appendChild(el("code", "", probe.path || ""));
+            tr.appendChild(pathTd);
+            tr.appendChild(el("td", "", probe.status === null || probe.status === undefined ? "err" : probe.status));
+            tr.appendChild(el("td", "", probe.classification || "-"));
+            const verTd = el("td");
+            const badgeClass = probe.verified ? "badge badge-ok" : (probe.status === 200 ? "badge badge-warn" : "badge badge-muted");
+            verTd.appendChild(el("span", badgeClass, probe.verified ? "verified" : "no"));
+            tr.appendChild(verTd);
+            tr.appendChild(el("td", "", probe.latency_ms !== undefined && probe.latency_ms !== null ? probe.latency_ms + " ms" : "-"));
+            tbody.appendChild(tr);
+          });
+          table.appendChild(tbody);
+          resultEl.appendChild(table);
+        }
+
+        if (Array.isArray(data.recommendations) && data.recommendations.length > 0) {
+          const heading = el("h3", "", "Recommendations");
+          const list = el("ul", "log-list");
+          data.recommendations.forEach(function (rec) {
+            list.appendChild(el("li", "", typeof rec === "string" ? rec : (rec.message || JSON.stringify(rec))));
+          });
+          resultEl.appendChild(heading);
+          resultEl.appendChild(list);
+        }
+
+        resultEl.hidden = false;
+      }
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const domain = input.value.trim().replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+        if (!domain) return;
+        input.value = domain;
+        button.disabled = true;
+        statusEl.textContent = "Probing " + domain + " via octopus-radar-api...";
+        resultEl.hidden = true;
+
+        try {
+          const url = API_BASE + "/v1/check/agent-ready?domain=" + encodeURIComponent(domain);
+          const response = await fetch(url, { headers: { Accept: "application/json" } });
+          const data = await response.json();
+          if (!response.ok || data.ok === false) {
+            statusEl.textContent = "Error (" + response.status + "): " + (data.error || "Probe failed.");
+          } else {
+            statusEl.textContent = "Checked " + data.domain + " at " + (data.checked_at || "now") + ".";
+            renderResult(data);
+          }
+        } catch (err) {
+          statusEl.textContent = "Request failed: " + (err && err.message ? err.message : String(err));
+        } finally {
+          button.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -240,6 +240,11 @@ The runtime works without this client; you can build your own. See the
 
 ## Standalone Examples & Empirical Benchmarks
 
+A live public **Agent-Web Observatory & Verification API** backed by these packages is hosted at
+[`octopus-radar-api.octopus-sios.workers.dev`](https://octopus-radar-api.octopus-sios.workers.dev)
+([OpenAPI 3.1](https://octopus-radar-api.octopus-sios.workers.dev/openapi.json) ·
+[Observatory dashboard](https://octopus-os.pages.dev/observatory.html)).
+
 The [examples collection](examples/README.md) contains two independently runnable
 MIT-licensed companion tools:
 
@@ -267,7 +272,7 @@ and the scientific and security scope boundaries. Neither tool requires Octopus.
 - [Extending Octopus](docs/contracts/EXTENSION_SURFACES.md) - adding providers, channels, workers, tools, checks.
 - [Security model](docs/security-model.md) - trust boundaries and known risks.
 - [Glossary](docs/glossary.md) · [Development](docs/development.md) · [Troubleshooting](TROUBLESHOOTING.md)
-- [Origin & stewardship](ORIGIN.md) · [Funding & continuity](FUNDING.md) · [Static site & engineering log](site/index.html)
+- [Origin & stewardship](ORIGIN.md) · [Funding & continuity](FUNDING.md) · [Public site & engineering log](https://octopus-os.pages.dev) ([`site/`](site/index.html))
 
 ---
 
@@ -280,7 +285,7 @@ rooms and explicitly unsandboxed processes do not have that isolation - see the
 This repository is maintained autonomously by a live Octopus instance
 ([Origin](ORIGIN.md)). Compute and inference continuity are funded transparently
 through self-custodial patronage and Drips Network ([Funding](FUNDING.md)), with
-public engineering logs in [`site/`](site/index.html).
+public engineering logs at [octopus-os.pages.dev](https://octopus-os.pages.dev) ([`site/`](site/index.html)).
 
 Independent software, not affiliated with or endorsed by OpenAI. Stored formats may change between preview builds.
 

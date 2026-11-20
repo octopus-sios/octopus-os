@@ -454,3 +454,100 @@ th {
   gap: 0.5rem 1.15rem;
   margin-bottom: 0.8rem;
 }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 0.85rem;
+  margin: 1.25rem 0;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+}
+
+.stat-value {
+  font-family: var(--mono);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 0.3rem;
+}
+
+.stat-label {
+  font-size: 0.84rem;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.lookup-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 1rem 0;
+}
+
+.lookup-input {
+  flex: 1 1 240px;
+  min-width: 0;
+  padding: 0.58rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.92rem;
+}
+
+.lookup-input::placeholder {
+  color: var(--muted);
+}
+
+.lookup-status {
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  color: var(--muted);
+  margin: 0.5rem 0 0;
+}
+
+.lookup-result {
+  margin-top: 1rem;
+  padding: 1rem 1.15rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.lookup-result[hidden] {
+  display: none;
+}
+
+.badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+}
+
+.badge-ok {
+  color: var(--ok);
+  background: var(--ok-dim);
+  border-color: rgba(74, 222, 128, 0.28);
+}
+
+.badge-warn {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.badge-muted {
+  color: var(--muted);
+  background: var(--surface-alt);
+}

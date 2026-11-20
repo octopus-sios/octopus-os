@@ -18,6 +18,7 @@
       </a>
       <nav class="site-nav" aria-label="Primary">
         <a href="#architecture">Architecture</a>
+        <a href="observatory.html">Observatory</a>
         <a href="#tools">Standalone Tools</a>
         <a href="#log">Engineering Log</a>
         <a href="#stewardship">Stewardship &amp; Funding</a>
@@ -45,6 +46,7 @@
       </ul>
       <div class="cta-row">
         <a class="btn btn-primary" href="https://github.com/octopus-sios/octopus-os">View source on GitHub</a>
+        <a class="btn" href="observatory.html">Agent-Web Observatory</a>
         <a class="btn" href="https://github.com/octopus-sios/octopus-os/blob/main/docs/linux.md">Linux headless &amp; AppArmor guide</a>
         <a class="btn" href="log/2026-11-20-linux-headless-readiness.html">Latest engineering log</a>
       </div>
@@ -97,6 +99,46 @@
             research question rather than a marketing claim.
           </p>
         </article>
+      </div>
+    </section>
+
+    <section id="observatory">
+      <h2>Live Agent-Web Observatory &amp; Verification API</h2>
+      <p class="section-intro">
+        A zero-cost public empirical benchmark and verification API deployed at
+        <a href="https://octopus-radar-api.octopus-sios.workers.dev"><code>octopus-radar-api.octopus-sios.workers.dev</code></a>,
+        grounded in our MIT-licensed <code>agent-ready-radar</code> and
+        <code>mcp-identity-guard</code> packages.
+      </p>
+
+      <div class="stat-grid" aria-label="2026-11-20 Observatory Metrics">
+        <div class="stat-card">
+          <div class="stat-value">36 / 324</div>
+          <div class="stat-label">Domains scanned &amp; passive HTTPS probes (2026-11-20)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">45.7 / 100</div>
+          <div class="stat-label">Average readiness score (median 51)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">30.9%</div>
+          <div class="stat-label">Naive HTTP-200 false-positive rate on core agent paths</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">8.3%</div>
+          <div class="stat-label">Explicit AI crawler rules in <code>robots.txt</code> (3 / 36)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">2.060 ms</div>
+          <div class="stat-label">Rust <code>mcp-identity-guard</code> p50 paired overhead</div>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="observatory.html">Explore findings &amp; live domain check</a>
+        <a class="btn" href="https://octopus-radar-api.octopus-sios.workers.dev/openapi.json">OpenAPI 3.1</a>
+        <a class="btn" href="https://octopus-radar-api.octopus-sios.workers.dev/.well-known/x402.json">x402 metadata</a>
+        <a class="btn" href="https://octopus-radar-api.octopus-sios.workers.dev/v1/dataset/latest">Latest JSON snapshot</a>
       </div>
     </section>
 
@@ -288,13 +330,14 @@
   <footer class="site-footer wrap">
     <div class="footer-links">
       <a href="https://github.com/octopus-sios/octopus-os">Repository</a>
+      <a href="observatory.html">Observatory</a>
       <a href="https://github.com/octopus-sios/octopus-os/blob/main/LICENSE">MIT License</a>
       <a href="https://github.com/octopus-sios/octopus-os/blob/main/ORIGIN.md">Origin</a>
       <a href="https://github.com/octopus-sios/octopus-os/blob/main/FUNDING.md">Funding</a>
       <a href="https://github.com/octopus-sios/octopus-os/blob/main/SECURITY.md">Security</a>
       <a href="https://github.com/octopus-sios/octopus-os/blob/main/CONTRIBUTING.md">Contributing</a>
     </div>
-    <p>Static HTML &amp; CSS only — zero analytics, zero cookies, zero external scripts or CDNs.</p>
+    <p>Zero analytics, zero cookies, zero external scripts or CDNs. Static HTML &amp; CSS with an optional live lookup on the Observatory page.</p>
   </footer>
 </body>
 </html>
