@@ -35,9 +35,14 @@ states the expected one and fails when the host differs, and any other host is
 refused. `runtime-build-receipt.json` in the output records the target and what
 it carries. A Linux distribution holds the runtime, the registry and the
 provider executables, copied with ordinary file copies and left unsigned. It
-includes the pinned Linux Codex transport and the Node-based package doctor.
-The native client file helper and desktop helper are macOS components. Process isolation on Linux is set
-up separately, see [Linux](linux.md).
+includes `bin/octopus` (the headless Rust runtime binary: `up`, `down`, `restart`,
+`doctor`, `project-ee-policies`), `bin/octopus-linux-process-authority`, the
+pinned Linux Codex transport, the Node-based package doctor, and systemd unit
+templates under `packaging/linux/`. The interactive/scripted Node CLI wrapper
+(`./octopus` / `app/cli/index.cjs` described below) runs from a source checkout
+with Node.js 24+ and connects to that shared runtime. The native client file
+helper and desktop helper are macOS components. Process isolation setup on Linux
+is documented in [Linux](linux.md).
 
 To use an existing desktop Home, select that exact directory:
 

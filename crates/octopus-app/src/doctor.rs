@@ -17,6 +17,9 @@ use tokio::task::JoinSet;
 const PROBE_OUTPUT_LIMIT_BYTES: usize = 64 * 1024;
 const CLIENT_DOCTOR_REPORT_LIMIT_BYTES: usize = 4 * 1024 * 1024;
 const PROBE_CONCURRENCY: usize = 8;
+const CLIENT_DOCTOR_TIMEOUT_ENV: &str = "OCTOPUS_DOCTOR_CLIENT_TIMEOUT_MS";
+const DEFAULT_CLIENT_DOCTOR_TIMEOUT_MS: u64 = 180_000;
+const MAX_CLIENT_DOCTOR_TIMEOUT_MS: u64 = 600_000;
 
 struct ProbeJob {
     interface: InterfaceId,
@@ -268,6 +271,38 @@ async fn run_client_doctor(
     octopus_home: &Path,
     installation_root: &Path,
 ) -> Result<Option<ClientDoctorReport>, String> {
+    let timeout_ms = resolve_client_doctor_timeout_ms(
+        std::env::var(CLIENT_DOCTOR_TIMEOUT_ENV).ok().as_deref(),
+    )?;
+    run_client_doctor_with_timeout(octopus_home, installation_root, timeout_ms).await
+}
+
+fn resolve_client_doctor_timeout_ms(raw: Option<&str>) -> Result<u64, String> {
+    let Some(raw) = raw else {
+        return Ok(DEFAULT_CLIENT_DOCTOR_TIMEOUT_MS);
+    };
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Ok(DEFAULT_CLIENT_DOCTOR_TIMEOUT_MS);
+    }
+    let parsed = trimmed.parse::<u64>().map_err(|_| {
+        format!(
+            "{CLIENT_DOCTOR_TIMEOUT_ENV} must be an integer between 1 and {MAX_CLIENT_DOCTOR_TIMEOUT_MS} ms, got '{trimmed}'"
+        )
+    })?;
+    if parsed == 0 || parsed > MAX_CLIENT_DOCTOR_TIMEOUT_MS {
+        return Err(format!(
+            "{CLIENT_DOCTOR_TIMEOUT_ENV} must be between 1 and {MAX_CLIENT_DOCTOR_TIMEOUT_MS} ms, got {parsed}"
+        ));
+    }
+    Ok(parsed)
+}
+
+async fn run_client_doctor_with_timeout(
+    octopus_home: &Path,
+    installation_root: &Path,
+    timeout_ms: u64,
+) -> Result<Option<ClientDoctorReport>, String> {
     let Some(layout) = client_doctor_layout(installation_root)? else {
         return Ok(None);
     };
@@ -305,14 +340,14 @@ async fn run_client_doctor(
         .take()
         .ok_or_else(|| "client doctor stderr is unavailable".to_string())?;
     let wait = async {
-        match tokio::time::timeout(Duration::from_secs(30), child.wait()).await {
+        match tokio::time::timeout(Duration::from_millis(timeout_ms), child.wait()).await {
             Ok(status) => status.map_err(|error| format!("client doctor wait failed: {error}")),
             Err(_) => {
                 child.kill().await.map_err(|error| {
                     format!("timed-out client doctor could not be killed: {error}")
                 })?;
                 let _ = child.wait().await;
-                Err("timed out after 30000 ms".to_string())
+                Err(format!("timed out after {timeout_ms} ms"))
             }
         }
     };
@@ -680,6 +715,52 @@ fn render_diagnostic(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn client_doctor_timeout_defaults_above_two_minutes_and_validates_override() {
+        assert!(DEFAULT_CLIENT_DOCTOR_TIMEOUT_MS >= 120_000);
+        assert_eq!(
+            resolve_client_doctor_timeout_ms(None).unwrap(),
+            DEFAULT_CLIENT_DOCTOR_TIMEOUT_MS
+        );
+        assert_eq!(
+            resolve_client_doctor_timeout_ms(Some("  ")).unwrap(),
+            DEFAULT_CLIENT_DOCTOR_TIMEOUT_MS
+        );
+        assert_eq!(
+            resolve_client_doctor_timeout_ms(Some("150000")).unwrap(),
+            150_000
+        );
+        assert!(resolve_client_doctor_timeout_ms(Some("0")).is_err());
+        assert!(resolve_client_doctor_timeout_ms(Some("600001")).is_err());
+        assert!(resolve_client_doctor_timeout_ms(Some("fast")).is_err());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn client_doctor_enforces_configured_timeout() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = tempfile::tempdir().unwrap();
+        let home = root.path().join("home");
+        let contents = root.path().join("Octopus.app/Contents");
+        let installation_root = contents.join("Resources/app");
+        std::fs::create_dir_all(installation_root.join("electron")).unwrap();
+        std::fs::write(
+            installation_root.join("electron/clientDoctor.cjs"),
+            "// timeout fixture",
+        )
+        .unwrap();
+        std::fs::create_dir_all(contents.join("MacOS")).unwrap();
+        let runner = contents.join("MacOS/Octopus");
+        std::fs::write(&runner, "#!/bin/sh\nsleep 5\n").unwrap();
+        std::fs::set_permissions(&runner, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+        let error = run_client_doctor_with_timeout(&home, &installation_root, 100)
+            .await
+            .err()
+            .expect("sleeping client doctor must time out");
+        assert_eq!(error, "timed out after 100 ms");
+    }
 
     #[tokio::test]
     async fn doctor_reports_bound_worker_loader_refusals_and_isolates_unused_presets() {

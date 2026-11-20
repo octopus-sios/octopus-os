@@ -31,6 +31,23 @@ ALSA headers are needed by the audio capability built with the workspace and
 CLI distribution, even when the runtime is used headlessly. These build
 prerequisites are separate from the process-isolation service below.
 
+## Runtime prerequisites
+
+On a minimal Ubuntu 24.04/26.04 host installing from a prebuilt Linux release
+tarball (`Octopus-<version>-linux-<arch>.tar.gz`), install the minimal OS runtime
+dependencies needed by the bundled capabilities and package doctor:
+
+```sh
+sudo apt-get update
+sudo apt-get install --no-install-recommends apparmor libasound2t64 nodejs zsh
+```
+
+- `apparmor`: provides `/usr/sbin/apparmor_parser`, `/etc/apparmor.d/abi/4.0`, and `apparmor.service`.
+- `libasound2t64`: shared library (`libasound.so.2`) required by the bundled audio capability (`libasound2` on older Debian/Ubuntu releases).
+- `nodejs`: runs `client-doctor.cjs` during `octopus doctor` and local package lifecycle scripts.
+- `zsh`: verified by `system_workspace_env` runtime dependency checks in `octopus doctor`.
+- Optional: `bubblewrap` (`sudo apt-get install --no-install-recommends bubblewrap`) if you use `world_provider_codex` and want its native Linux sandbox without fallback warnings.
+
 ## Install the platform component
 
 The backend requires Linux 6.5 or later, AppArmor 4 or later, the AppArmor 4.0
@@ -46,6 +63,21 @@ on Ubuntu:
 sudo apt-get install apparmor
 ```
 
+### From a Linux release tarball
+
+`Octopus-<version>-linux-<arch>.tar.gz` bundles both
+`bin/octopus-linux-process-authority` and the installer/unit templates under
+`packaging/linux/`. After unpacking the release into `/opt/octopus/releases/<release>`
+and pointing `/opt/octopus/current` to it, install and start the process-authority
+service for the Unix account that will run Octopus (for example `octopus`):
+
+```sh
+sudo sh /opt/octopus/current/packaging/linux/install-linux.sh \
+  /opt/octopus/current/bin/octopus-linux-process-authority octopus
+```
+
+### From a source checkout
+
 Build the service on the Linux machine from the same checkout as Octopus:
 
 ```sh
@@ -60,7 +92,18 @@ sudo sh registry/worker_environment_kind/process_session/packages/octopus-linux-
   "$PWD/target/release/octopus-linux-process-authority" operator
 ```
 
-Start a new login session so the account receives its `octopus-process` group.
+The installer creates the `octopus-process` system group if absent, adds the
+operator account to it, installs `/usr/libexec/octopus/octopus-linux-process-authority`,
+installs `/etc/systemd/system/octopus-process-authority.service`, and starts the
+service. Verify the control socket is live (`root:octopus-process`, mode `0660`):
+
+```sh
+systemctl status octopus-process-authority.service
+ls -la /run/octopus-process-authority/control.sock
+```
+
+Start a new login session (or restart `octopus-runtime.service`, which declares
+`SupplementaryGroups=octopus-process`) so the account receives its `octopus-process` group.
 Run Octopus as that account. The service does not start Octopus, execute tool
 commands or change their Unix user. Its socket is available only to root and
 members of that group. Group membership authorizes use of the platform service;
@@ -133,15 +176,28 @@ machine; existing Homes and their execution evidence are not migrated.
 ## Running the headless runtime under systemd
 
 A hardened systemd unit template is provided at
-[`packaging/linux/octopus-runtime.service`](../packaging/linux/octopus-runtime.service).
+[`packaging/linux/octopus-runtime.service`](../packaging/linux/octopus-runtime.service)
+(also included inside every Linux release tarball at `packaging/linux/octopus-runtime.service`).
 It runs `octopus up` as a dedicated non-root `octopus` user in the
-`octopus-process` group, with `Restart=on-failure`, `RestartSec=5s`,
-`TimeoutStopSec=60s`, `UMask=0077`, and read-only OS directories
-(`ProtectSystem=full`, `NoNewPrivileges=yes`).
+`octopus-process` group, ordered after `octopus-process-authority.service`
+(`After=network-online.target octopus-process-authority.service`,
+`Wants=network-online.target octopus-process-authority.service`), with
+`Restart=on-failure`, `RestartSec=5s`, `TimeoutStopSec=60s`, `UMask=0077`, and
+read-only OS/kernel trees (`ProtectSystem=full`, `ProtectKernelTunables=yes`,
+`ProtectControlGroups=yes`). `NoNewPrivileges` is intentionally left unset on
+the parent runtime service so confined processes with sandbox delegation can
+perform AppArmor profile transitions; `octopus-linux-process-authority` applies
+`PR_SET_NO_NEW_PRIVS` directly to every non-delegating confined child.
 
-1. Create the service account and directories (install `octopus-process-authority.service`
-   first so the `octopus-process` group exists, or override `SupplementaryGroups=` in a
-   systemd drop-in if running without AppArmor process isolation):
+The bundled `bin/octopus` executable in the Linux release tarball is the Rust
+headless runtime binary (`up`, `down`, `restart`, `doctor`, `project-ee-policies`).
+The interactive/scripted Node terminal client (`./octopus` / `app/cli/index.cjs`
+documented in [Terminal client](cli.md)) runs from a source checkout with Node.js 24+.
+On low-IOPS hosts, `octopus doctor` allows 180 seconds by default for
+`client-doctor.cjs` and honors `OCTOPUS_DOCTOR_CLIENT_TIMEOUT_MS` (1..600000 ms)
+when an explicit override is needed.
+
+1. Create the service account and directories:
 
 ```sh
 sudo useradd --system --create-home --home-dir /var/lib/octopus --shell /usr/sbin/nologin octopus
@@ -149,22 +205,31 @@ sudo install -d -o octopus -g octopus -m 0700 /var/lib/octopus/.octopus
 sudo install -d -o root -g root -m 0755 /opt/octopus /etc/octopus
 ```
 
-2. Install either a release tarball (`Octopus-<version>-linux-<arch>.tar.gz`) or a local
-   `npm --prefix app run build:cli` output under `/opt/octopus/releases/<release>` and point
-   `/opt/octopus/current` to it:
+2. Stage and unpack a release tarball (`Octopus-<version>-linux-<arch>.tar.gz` — on small
+   VPS hosts whose `/tmp` is a small tmpfs, stage downloads under `/opt/octopus/dl` rather
+   than `/tmp`) or a local `npm --prefix app run build:cli` output under
+   `/opt/octopus/releases/<release>` and point `/opt/octopus/current` to it:
 
 ```sh
 sudo ln -sfn /opt/octopus/releases/<release> /opt/octopus/current
+```
+
+3. Install and start `octopus-process-authority.service` for the `octopus` user (creates
+   the `octopus-process` group and `/run/octopus-process-authority/control.sock`):
+
+```sh
+sudo sh /opt/octopus/current/packaging/linux/install-linux.sh \
+  /opt/octopus/current/bin/octopus-linux-process-authority octopus
 ```
 
    To run directly from a checkout's `app/build/cli/runtime` directory or with a different
    service user/Home, place overrides in `/etc/octopus/runtime.env` (`chmod 0600`) and a
    systemd drop-in (`sudo systemctl edit octopus-runtime.service`).
 
-3. Install and start the unit:
+4. Install and start the runtime unit:
 
 ```sh
-sudo install -o root -g root -m 0644 packaging/linux/octopus-runtime.service /etc/systemd/system/octopus-runtime.service
+sudo install -o root -g root -m 0644 /opt/octopus/current/packaging/linux/octopus-runtime.service /etc/systemd/system/octopus-runtime.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now octopus-runtime.service
 systemctl status octopus-runtime.service

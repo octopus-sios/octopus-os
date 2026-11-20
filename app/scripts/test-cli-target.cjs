@@ -20,11 +20,16 @@ test("a CLI distribution resolves the target of the machine that builds it", () 
 });
 
 test("a Linux distribution is headless and a macOS one keeps every macOS part", () => {
-  const all = (value) => ({ client_filesystem: value, desktop_native: value, managed_codex: value, code_signing: value });
-  assert.deepEqual(resolveCliTarget({ platform: "darwin", architecture: "arm64" }).components, all(true));
-  assert.deepEqual(resolveCliTarget({ platform: "darwin", architecture: "x64" }).components, all(true));
+  assert.deepEqual(resolveCliTarget({ platform: "darwin", architecture: "arm64" }).components, {
+    client_filesystem: true, desktop_native: true, managed_codex: true, code_signing: true, process_authority: false,
+  });
+  assert.deepEqual(resolveCliTarget({ platform: "darwin", architecture: "x64" }).components, {
+    client_filesystem: true, desktop_native: true, managed_codex: true, code_signing: true, process_authority: false,
+  });
   for (const architecture of ["x64", "arm64"]) {
-    assert.deepEqual(resolveCliTarget({ platform: "linux", architecture }).components, { ...all(false), managed_codex: true });
+    assert.deepEqual(resolveCliTarget({ platform: "linux", architecture }).components, {
+      client_filesystem: false, desktop_native: false, managed_codex: true, code_signing: false, process_authority: true,
+    });
   }
 });
 

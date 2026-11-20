@@ -7,7 +7,7 @@ const { spawnSync } = require("node:child_process");
 const { test } = require("node:test");
 const { releaseLinux, inspectBundle, sha256File } = require("./release-linux.cjs");
 
-function createFakeLinuxBundle(root, { version = "0.1.0", architecture = "x64", platform = "linux", corruptBinary = false } = {}) {
+function createFakeLinuxBundle(root, { version = "0.1.0", architecture = "x64", platform = "linux", corruptBinary = false, includeProcessAuthority = true } = {}) {
   const bundle = path.join(root, "runtime");
   const binDir = path.join(bundle, "bin");
   fs.mkdirSync(binDir, { recursive: true });
@@ -17,6 +17,14 @@ function createFakeLinuxBundle(root, { version = "0.1.0", architecture = "x64", 
   fs.writeFileSync(octopus, "#!/bin/sh\necho octopus\n", { mode: 0o755 });
   const bytes = fs.readFileSync(octopus);
   const sha256 = corruptBinary ? "f".repeat(64) : crypto.createHash("sha256").update(bytes).digest("hex");
+  const binaries = [{ path: "bin/octopus", bytes: bytes.length, sha256 }];
+  if (includeProcessAuthority) {
+    const authority = path.join(binDir, "octopus-linux-process-authority");
+    fs.writeFileSync(authority, "#!/bin/sh\necho authority\n", { mode: 0o755 });
+    const authorityBytes = fs.readFileSync(authority);
+    const authoritySha256 = crypto.createHash("sha256").update(authorityBytes).digest("hex");
+    binaries.push({ path: "bin/octopus-linux-process-authority", bytes: authorityBytes.length, sha256: authoritySha256 });
+  }
   fs.writeFileSync(path.join(bundle, "registry", ".octopus-source.json"), JSON.stringify({ schema_version: 1, id: "test" }) + "\n");
   fs.writeFileSync(path.join(bundle, "local-packages", "registry", ".octopus-source.json"), JSON.stringify({ schema_version: 1, id: "test" }) + "\n");
   fs.writeFileSync(path.join(bundle, "client-doctor.cjs"), "module.exports = {};\n");
@@ -30,8 +38,8 @@ function createFakeLinuxBundle(root, { version = "0.1.0", architecture = "x64", 
     platform,
     architecture,
     target: architecture === "arm64" ? "aarch64-unknown-linux-gnu" : "x86_64-unknown-linux-gnu",
-    components: { client_filesystem: false, desktop_native: false, managed_codex: true, code_signing: false },
-    binaries: [{ path: "bin/octopus", bytes: bytes.length, sha256 }],
+    components: { client_filesystem: false, desktop_native: false, managed_codex: true, code_signing: false, process_authority: includeProcessAuthority },
+    binaries,
   }, null, 2) + "\n");
   return bundle;
 }
@@ -62,15 +70,26 @@ test("releaseLinux packages, verifies, and writes SHA-256 checksum for a Linux C
     assert.equal(untar.status, 0);
     assert.equal(fs.existsSync(path.join(extracted, "octopus-0.1.0-linux-x64", "bin", "octopus")), true);
     assert.equal(
+      fs.existsSync(path.join(extracted, "octopus-0.1.0-linux-x64", "bin", "octopus-linux-process-authority")),
+      true,
+    );
+    assert.equal(
       fs.existsSync(path.join(extracted, "octopus-0.1.0-linux-x64", "packaging", "linux", "octopus-runtime.service")),
       true,
     );
+    assert.equal(
+      fs.existsSync(path.join(extracted, "octopus-0.1.0-linux-x64", "packaging", "linux", "octopus-process-authority.service")),
+      true,
+    );
+    const installScript = path.join(extracted, "octopus-0.1.0-linux-x64", "packaging", "linux", "install-linux.sh");
+    assert.equal(fs.existsSync(installScript), true);
+    assert.ok(fs.statSync(installScript).mode & 0o111);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
 
-test("inspectBundle fails closed on non-Linux platform, version mismatch, or corrupted binary hash", () => {
+test("inspectBundle fails closed on non-Linux platform, version mismatch, missing process authority, or corrupted binary hash", () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "octopus-release-linux-err-"));
   try {
     const macBundle = createFakeLinuxBundle(path.join(root, "mac"), { platform: "darwin" });
@@ -81,6 +100,12 @@ test("inspectBundle fails closed on non-Linux platform, version mismatch, or cor
 
     const corrupt = createFakeLinuxBundle(path.join(root, "corrupt"), { corruptBinary: true });
     assert.throws(() => inspectBundle(corrupt, "0.1.0", { verifyManagedCodex: () => {} }), /SHA-256 mismatch/);
+
+    const noAuthority = createFakeLinuxBundle(path.join(root, "no-auth"), { includeProcessAuthority: false });
+    assert.throws(
+      () => inspectBundle(noAuthority, "0.1.0", { verifyManagedCodex: () => {} }),
+      /no executable bin\/octopus-linux-process-authority binary/,
+    );
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

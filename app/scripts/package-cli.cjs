@@ -43,7 +43,10 @@ function packageCliRuntime({ appRoot = path.resolve(__dirname, ".."), target = n
     const library = path.join(stage, "local-packages");
     const packages = path.join(library, "registry");
     const distribution = path.join(appRoot, "distribution");
-    const binaries = packager.collectBundledBinaries(source);
+    const binaries = [...new Set([
+      ...packager.collectBundledBinaries(source),
+      ...(cli.components.process_authority ? ["octopus-linux-process-authority"] : []),
+    ])];
     for (const binary of binaries) {
       const file = path.join(repoRoot, "target", "release", binary);
       const stat = fs.lstatSync(file);
@@ -62,6 +65,9 @@ function packageCliRuntime({ appRoot = path.resolve(__dirname, ".."), target = n
     const ownership = packager.registryExecutableOwnership(packages);
     const ownerExecutables = new Set();
     const installationReferences = new Set();
+    if (cli.components.process_authority) {
+      installationReferences.add("octopus-linux-process-authority");
+    }
     packager.rewriteBundledExecutablePaths(packages, ownership, ownerExecutables, installationReferences);
     packager.rewriteBundledExecutablePaths(baseline, ownership, ownerExecutables, installationReferences);
     const installationBinaries = packager.sharedBinaries(installationReferences);

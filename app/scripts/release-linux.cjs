@@ -12,14 +12,30 @@ const expectedTargets = {
   arm64: "aarch64-unknown-linux-gnu",
 };
 
+function defaultPackagingFiles() {
+  const processAuthorityRoot = path.join(
+    repoRoot, "registry", "worker_environment_kind", "process_session",
+    "packages", "octopus-linux-process-authority",
+  );
+  return [
+    { source: path.join(repoRoot, "packaging", "linux", "octopus-runtime.service"), destination: "packaging/linux/octopus-runtime.service" },
+    { source: path.join(processAuthorityRoot, "octopus-process-authority.service"), destination: "packaging/linux/octopus-process-authority.service" },
+    { source: path.join(processAuthorityRoot, "install-linux.sh"), destination: "packaging/linux/install-linux.sh", mode: 0o755 },
+  ];
+}
+
 function releaseLinux(options = {}) {
   const bundle = path.resolve(options.bundle ?? path.join(appRoot, "build", "cli", "runtime"));
   const output = path.resolve(options.output ?? path.join(appRoot, "build", "release-linux"));
   const version = options.version ?? JSON.parse(fs.readFileSync(path.join(appRoot, "package.json"), "utf8")).version;
   const verifyManagedCodex = options.verifyManagedCodex ?? ((binDir) => managedCodex.verifyInstallation(binDir));
-  const serviceTemplate = options.serviceTemplate === undefined
-    ? path.join(repoRoot, "packaging", "linux", "octopus-runtime.service")
-    : options.serviceTemplate;
+  const packagingFiles = options.packagingFiles === undefined
+    ? (options.serviceTemplate === undefined
+      ? defaultPackagingFiles()
+      : (options.serviceTemplate
+        ? [{ source: options.serviceTemplate, destination: `packaging/linux/${path.basename(options.serviceTemplate)}` }]
+        : []))
+    : options.packagingFiles;
   if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error(`package version must be a three-part numeric version: ${version}`);
   if (output === bundle || output.startsWith(`${bundle}${path.sep}`)) throw new Error("release output must be outside the bundle");
   const { architecture, target } = inspectBundle(bundle, version, { verifyManagedCodex });
@@ -27,7 +43,7 @@ function releaseLinux(options = {}) {
   fs.mkdirSync(output, { recursive: true });
   const rootName = `octopus-${version}-linux-${architecture}`;
   const archiveName = `Octopus-${version}-linux-${architecture}.tar.gz`;
-  const archive = writeTarball({ bundle, output, archiveName, rootName, serviceTemplate });
+  const archive = writeTarball({ bundle, output, archiveName, rootName, packagingFiles });
   const digest = sha256File(archive);
   const shaFile = path.join(output, `${archiveName}.sha256`);
   fs.writeFileSync(shaFile, `${digest}  ${archiveName}\n`);
@@ -86,13 +102,23 @@ function inspectBundle(bundle, version, { verifyManagedCodex = (binDir) => manag
   if (!runtimeStat?.isFile() || !(runtimeStat.mode & 0o111)) {
     throw new Error("Linux CLI bundle has no executable bin/octopus binary");
   }
+  const authorityBin = path.join(binDir, "octopus-linux-process-authority");
+  const authorityStat = fs.lstatSync(authorityBin, { throwIfNoEntry: false });
+  if (!authorityStat?.isFile() || !(authorityStat.mode & 0o111)) {
+    throw new Error("Linux CLI bundle has no executable bin/octopus-linux-process-authority binary");
+  }
+  if (receipt.components?.process_authority !== true) {
+    throw new Error("Linux CLI receipt must declare components.process_authority=true");
+  }
   if (!Array.isArray(receipt.binaries) || receipt.binaries.length === 0) {
     throw new Error("Linux CLI receipt declares no binaries");
   }
+  const attestedPaths = new Set();
   for (const entry of receipt.binaries) {
     if (typeof entry?.path !== "string" || !Number.isSafeInteger(entry?.bytes) || !/^[0-9a-f]{64}$/.test(entry?.sha256 ?? "")) {
       throw new Error(`malformed binary receipt entry: ${JSON.stringify(entry)}`);
     }
+    attestedPaths.add(entry.path);
     const file = path.resolve(bundle, entry.path);
     const relative = path.relative(bundle, file);
     if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
@@ -102,6 +128,11 @@ function inspectBundle(bundle, version, { verifyManagedCodex = (binDir) => manag
     if (!stat?.isFile()) throw new Error(`missing receipt binary: ${entry.path}`);
     if (stat.size !== entry.bytes) throw new Error(`receipt binary size mismatch for ${entry.path}`);
     if (sha256File(file) !== entry.sha256) throw new Error(`receipt binary SHA-256 mismatch for ${entry.path}`);
+  }
+  for (const requiredBin of ["bin/octopus", "bin/octopus-linux-process-authority"]) {
+    if (!attestedPaths.has(requiredBin)) {
+      throw new Error(`Linux CLI receipt does not attest required binary: ${requiredBin}`);
+    }
   }
   for (const required of [
     path.join("registry", ".octopus-source.json"),
@@ -118,17 +149,21 @@ function inspectBundle(bundle, version, { verifyManagedCodex = (binDir) => manag
   return { architecture, target: receipt.target, receipt };
 }
 
-function writeTarball({ bundle, output, archiveName, rootName, serviceTemplate }) {
+function writeTarball({ bundle, output, archiveName, rootName, packagingFiles }) {
   const archive = path.join(output, archiveName);
   const stage = fs.mkdtempSync(path.join(output, ".tarball-stage-"));
   const verify = fs.mkdtempSync(path.join(output, ".tarball-verify-"));
   try {
     const stagedRoot = path.join(stage, rootName);
     copyTree(bundle, stagedRoot, { recursive: true, verbatimSymlinks: true }, "linux");
-    if (serviceTemplate && fs.existsSync(serviceTemplate)) {
-      const unitDestination = path.join(stagedRoot, "packaging", "linux", path.basename(serviceTemplate));
-      fs.mkdirSync(path.dirname(unitDestination), { recursive: true });
-      copyFile(serviceTemplate, unitDestination, "linux");
+    for (const file of packagingFiles) {
+      if (!file?.source || !fs.existsSync(file.source)) {
+        throw new Error(`Required Linux packaging file is missing: ${file?.source ?? "<unspecified>"}`);
+      }
+      const destination = path.join(stagedRoot, ...file.destination.split("/"));
+      fs.mkdirSync(path.dirname(destination), { recursive: true });
+      copyFile(file.source, destination, "linux");
+      if (file.mode !== undefined) fs.chmodSync(destination, file.mode);
     }
     const expected = treeManifest(stagedRoot);
     run("tar", ["-czf", archive, "-C", stage, rootName]);

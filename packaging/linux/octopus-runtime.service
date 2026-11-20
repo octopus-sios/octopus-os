@@ -24,14 +24,12 @@ TimeoutStopSec=60s
 KillMode=mixed
 LimitNOFILE=65536
 UMask=0077
-NoNewPrivileges=yes
+# Keep NoNewPrivileges unset here so confined processes with sandbox delegation
+# can perform AppArmor profile transitions via octopus-linux-process-authority,
+# which sets PR_SET_NO_NEW_PRIVS on every non-delegating confined child itself.
 ProtectSystem=full
 ProtectKernelTunables=yes
-ProtectKernelModules=yes
 ProtectControlGroups=yes
-LockPersonality=yes
-RestrictRealtime=yes
-RestrictSUIDSGID=yes
 
 [Install]
 WantedBy=multi-user.target

@@ -7,8 +7,8 @@ const TARGETS = Object.freeze({
 const SUPPORTED_TARGETS = Object.freeze(Object.keys(TARGETS).sort());
 
 const COMPONENTS = Object.freeze({
-  darwin: Object.freeze({ client_filesystem: true, desktop_native: true, managed_codex: true, code_signing: true }),
-  linux: Object.freeze({ client_filesystem: false, desktop_native: false, managed_codex: true, code_signing: false }),
+  darwin: Object.freeze({ client_filesystem: true, desktop_native: true, managed_codex: true, code_signing: true, process_authority: false }),
+  linux: Object.freeze({ client_filesystem: false, desktop_native: false, managed_codex: true, code_signing: false, process_authority: true }),
 });
 
 function hostTarget(platform = process.platform, architecture = process.arch) {

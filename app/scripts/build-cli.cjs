@@ -37,7 +37,12 @@ async function buildCli({ runtime = false, target = null, outputRoot = null } = 
       const desktop = path.join(registry, "worker_environment_kind/desktop_session/packages/octopus-system-gui-env/native");
       require(path.join(desktop, "build.cjs")).buildDesktopNative(path.join(desktop, "bin/octopus-desktop-native"));
     }
-    const bins = [...new Set([...packager.collectBundledBinaries(registry), "octopus-provider-opencodex-life", "octopus-input-intake-life"])];
+    const bins = [...new Set([
+      ...packager.collectBundledBinaries(registry),
+      "octopus-provider-opencodex-life",
+      "octopus-input-intake-life",
+      ...(cli.components.process_authority ? ["octopus-linux-process-authority"] : []),
+    ])];
     run("cargo", ["build", "--locked", "--release", ...bins.flatMap((bin) => ["--bin", bin])], repoRoot);
     packager.materializeProviderLife(provider, "octopus-provider-opencodex-life");
     packager.materializeProviderLife(path.join(provider, "intake"), "octopus-input-intake-life");
