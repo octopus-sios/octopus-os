@@ -14,10 +14,12 @@ concurrency:
 
 jobs:
   macos:
-    runs-on: macos-15
+    runs-on: macos-latest
     timeout-minutes: 300
     env:
-      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
+      CARGO_INCREMENTAL: "0"
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,6 +38,12 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Compiler cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
 
       - name: Release tag matches the app version
         if: startsWith(github.ref, 'refs/tags/')
@@ -56,8 +64,6 @@ jobs:
           node app/native/runtime.cjs electron
 
       - name: Package Octopus.app
-        env:
-          CARGO_INCREMENTAL: "0"
         run: npm --prefix app run package:mac
 
       - name: Build and verify the disk image
