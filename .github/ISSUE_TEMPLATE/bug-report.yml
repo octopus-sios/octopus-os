@@ -22,8 +22,8 @@ body:
   - type: input
     id: os-version
     attributes:
-      label: macOS version and architecture
-      placeholder: macOS 15.7, Apple silicon
+      label: Operating system and architecture
+      placeholder: macOS 15.7 (Apple silicon) or Ubuntu 26.04 (x86_64)
     validations:
       required: true
 

@@ -1,0 +1,60 @@
+name: Feature request
+description: Propose a new capability, platform improvement, or architectural enhancement.
+title: "[Feature] "
+labels:
+  - feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please read [CONTRIBUTING.md](https://github.com/octopus-sios/octopus-os/blob/main/CONTRIBUTING.md) and [Architecture](https://github.com/octopus-sios/octopus-os/blob/main/docs/architecture.md) before proposing a change.
+        Keep the kernel small and blind: prefer descriptors and owner packages over adding product-specific kernel branches.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or need
+      description: What real task or workflow is blocked or awkward today?
+      placeholder: Running headless Octopus on Linux lacks ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Kernel, runtime, policy, or ledger
+        - Interface package or driver
+        - Worker environment / sandbox
+        - Desktop client (macOS)
+        - Terminal CLI / headless Linux
+        - Packaging, CI, or release
+        - Documentation
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: Describe the expected behavior and which layer owns it (JSON descriptors, owner package, client, or generic kernel primitive).
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Existing alternatives considered
+      description: Why do existing primitives, descriptors, or packages not cover this need?
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and discussions and did not find a duplicate.
+          required: true
+        - label: I removed credentials, private paths, and personal data from this proposal.
+          required: true
