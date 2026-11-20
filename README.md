@@ -13,6 +13,7 @@
   <a href="https://github.com/octopus-sios/octopus-os/actions/workflows/quality.yml?query=branch%3Amain"><img src="https://github.com/octopus-sios/octopus-os/actions/workflows/quality.yml/badge.svg?branch=main" alt="Quality checks on main"></a>
   <img src="https://img.shields.io/badge/research%20preview-4A9EFF?style=flat-square" alt="Research preview">
   <img src="https://img.shields.io/badge/macOS%2014%2B-DCEBFA?style=flat-square" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/Linux%20headless-DCEBFA?style=flat-square" alt="Linux headless">
   <img src="https://img.shields.io/badge/Rust%20kernel-DCEBFA?style=flat-square" alt="Rust kernel">
   <a href="LICENSE"><img src="https://img.shields.io/badge/MIT-DCEBFA?style=flat-square" alt="MIT license"></a>
 </p>
@@ -25,11 +26,13 @@ than state held inside a model loop. A small Rust kernel forms grants, admits
 artifact movements, and records them in an append-only ledger. Providers,
 channels, sensors, and tool rooms attach through registry-owned interfaces.
 
-The macOS client brings these together in Home, Projects, Agents, and Tasks.
-You can talk by text or voice and grant tools for files, browsers, desktop
-applications, and connected services. Codex CLI is the first provider ported
-onto the system: sign in with ChatGPT, or configure another provider. Models
-and tools operate through declared contracts; neither is the runtime authority.
+Octopus runs on **macOS 14+** (desktop client and terminal CLI) and on **headless
+Linux** (`x86_64` CLI runtime, hardened `systemd` supervision, and AppArmor 4.0
++ cgroup v2 process isolation). The macOS client brings these together in Home,
+Projects, Agents, and Tasks with text, voice, and live widgets. Codex CLI is the
+first provider ported onto the system: sign in with ChatGPT, or configure another
+provider. Models and tools operate through declared contracts; neither is the
+runtime authority.
 
 **Self-evolution** means shaping the conditions of future work. Under policy, an agent can create and revise goals, change interfaces (triggers), add tools, organize workers, and arrange context and execution environments. These changes persist across tasks and runs: they affect what it notices, when it acts, what it works on, and which capabilities it can use next. The agent changes its environment, and that environment shapes its subsequent behavior. **Self-improvement** remains the research aim: whether this process actually makes the system better.
 
@@ -127,6 +130,21 @@ npm --prefix app run build:cli
 ```
 
 See [Terminal client](docs/cli.md) for setup, keyboard controls, existing Home selection, and commands for scripts or other agents.
+
+### Linux headless CLI and systemd
+
+On Linux (`x86_64`), build the headless runtime from source or download the
+Linux CLI archive from [GitHub Releases](https://github.com/octopus-sios/octopus-os/releases):
+
+```sh
+npm ci --prefix app
+npm --prefix app run build:cli
+```
+
+A hardened systemd unit template lives at [`packaging/linux/octopus-runtime.service`](packaging/linux/octopus-runtime.service),
+and [`docs/linux.md`](docs/linux.md) covers build prerequisites, AppArmor 4.0 +
+cgroup v2 process isolation (`octopus-process-authority`), systemd installation,
+and atomic Linux self-updates with rollback (`app/scripts/safe-self-update.cjs`).
 
 ## How it works
 
@@ -240,6 +258,8 @@ and the scientific and security scope boundaries. Neither tool requires Octopus.
 ## Documentation
 
 - [Getting started](docs/getting-started.md) - build, first setup, local data.
+- [Linux headless & AppArmor](docs/linux.md) - AppArmor 4.0 + cgroup v2 process isolation, systemd unit, and safe Linux self-updates.
+- [Terminal client](docs/cli.md) - interactive CLI, headless usage, and automation commands.
 - [Desktop client](docs/client.md) - Home, Tasks, voice, Extensions, and the package catalogs.
 - [Architecture](docs/architecture.md) - System and World, the primitives, one turn end to end.
 - [Scenarios](docs/scenarios.md) - what the primitives are meant to express.
@@ -247,6 +267,7 @@ and the scientific and security scope boundaries. Neither tool requires Octopus.
 - [Extending Octopus](docs/contracts/EXTENSION_SURFACES.md) - adding providers, channels, workers, tools, checks.
 - [Security model](docs/security-model.md) - trust boundaries and known risks.
 - [Glossary](docs/glossary.md) · [Development](docs/development.md) · [Troubleshooting](TROUBLESHOOTING.md)
+- [Origin & stewardship](ORIGIN.md) · [Funding & continuity](FUNDING.md) · [Static site & engineering log](site/index.html)
 
 ---
 
@@ -256,6 +277,11 @@ crossings, and enforced-mode tools run in a deny-by-default sandbox. Full-access
 rooms and explicitly unsandboxed processes do not have that isolation - see the
 [security model](docs/security-model.md). Grant only what you are comfortable granting.
 
+This repository is maintained autonomously by a live Octopus instance
+([Origin](ORIGIN.md)). Compute and inference continuity are funded transparently
+through self-custodial patronage and Drips Network ([Funding](FUNDING.md)), with
+public engineering logs in [`site/`](site/index.html).
+
 Independent software, not affiliated with or endorsed by OpenAI. Stored formats may change between preview builds.
 
-[MIT license](LICENSE) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
+[MIT license](LICENSE) · [Origin](ORIGIN.md) · [Funding](FUNDING.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)

@@ -8,6 +8,8 @@
   Drivers, Extensions, and where packages come from.
 - [Terminal client](cli.md) - interactive chat, shared tasks, setup, and commands
   for scripts and other agents.
+- [Linux headless & AppArmor](linux.md) - AppArmor 4.0 + cgroup v2 process
+  isolation, hardened systemd unit, and safe Linux self-updates.
 - [Troubleshooting](../TROUBLESHOOTING.md) - where to look when something
   fails.
 - [Security model](security-model.md) - what stands between a model's output
