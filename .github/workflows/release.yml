@@ -133,12 +133,11 @@ jobs:
           compression-level: 0
           retention-days: 7
 
-  publish:
+  verify-release-bundle:
     needs: [macos, build-linux-cli]
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Download release assets
         uses: actions/download-artifact@v4
@@ -177,16 +176,65 @@ jobs:
             mv checksums.txt.merged checksums.txt
           )
 
-      - name: Verify checksums
+      - name: Verify checksums and release bundle completeness
         working-directory: release-assets/release
         run: |
           test -s checksums.txt
           sha256sum -c checksums.txt
+          test -s ../release-notes.md
+          if grep -Eq '\{\{[^}]*\}\}' ../release-notes.md; then
+            echo "release-notes.md contains unresolved template placeholders" >&2
+            exit 1
+          fi
+          shopt -s nullglob
+          dmgs=(Octopus-*-macos-*.dmg)
+          linux_tarballs=(Octopus-*-linux-*.tar.gz)
+          if [ "${#dmgs[@]}" -eq 0 ] || [ "${#linux_tarballs[@]}" -eq 0 ] || [ ! -s install.sh ]; then
+            echo "Release bundle is missing required macOS DMG, Linux CLI tarball, or install.sh" >&2
+            exit 1
+          fi
           for file in *; do
             [ "$file" = checksums.txt ] && continue
             awk -v asset="$file" '$2 == asset { found = 1 } END { exit found ? 0 : 1 }' checksums.txt \
               || { echo "checksums.txt has no entry for $file" >&2; exit 1; }
           done
+          {
+            echo "### Verified Release Bundle (${{ github.event_name }} on \`${{ github.ref_name }}\`)"
+            echo ""
+            echo '```text'
+            cat checksums.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload verified release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: octopus-release-bundle
+          path: |
+            release-assets/release/
+            release-assets/release-notes.md
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  publish:
+    needs: [verify-release-bundle]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download verified release bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: octopus-release-bundle
+          path: release-assets
+
+      - name: Re-verify checksums before publishing
+        working-directory: release-assets/release
+        run: |
+          test -s checksums.txt
+          sha256sum -c checksums.txt
 
       - name: Create draft release
         env:
